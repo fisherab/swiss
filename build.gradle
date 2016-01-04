@@ -1,0 +1,58 @@
+apply plugin: 'eclipse'
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'org.javafxports:jfxmobile-plugin:1.0.3'
+    }
+}
+
+
+apply plugin: 'org.javafxports.jfxmobile'
+
+mainClassName = 'uk.org.harwellcroquet.swiss.SwissApp'
+version = '8u40'
+
+repositories {
+    jcenter()
+    mavenLocal()
+    maven {
+        url 'http://nexus.gluonhq.com/nexus/content/repositories/releases/'
+    }
+}
+
+jfxmobile {
+    ios {
+        infoPList = file('src/ios/Default-Info.plist')
+        forceLinkClasses = [
+            'org.glassfish.json.**.*',
+            'javax.json.**.*',
+            'com.gluonhq.**.*',
+            'com.airhacks.afterburner.**.*'
+        ]
+    }
+    android {
+        manifest = 'src/android/AndroidManifest.xml'
+        signingConfig {
+            storeFile hasProperty('GLUON_APK_SIGN_KEYSTORE') ? file($GLUON_APK_SIGN_KEYSTORE) : null
+            storePassword hasProperty('GLUON_APK_SIGN_PASSWORD') ? $GLUON_APK_SIGN_PASSWORD : ''
+            keyAlias hasProperty('GLUON_APK_SIGN_KEYALIAS') ? $GLUON_APK_SIGN_KEYALIAS : ''
+            keyPassword hasProperty('GLUON_APK_SIGN_PASSWORD') ? $GLUON_APK_SIGN_PASSWORD : ''
+        }
+    }
+}
+
+ext.GLUON_VERSION = "1.0.0"
+dependencies {
+    compile 'com.airhacks:afterburner.mfx:1.6.2'
+    compile 'org.glassfish:javax.json:1.0.4'
+
+    compile "com.gluonhq:charm:$GLUON_VERSION"
+    testCompile "junit:junit:4.12"
+    androidRuntime "com.gluonhq:charm-android:$GLUON_VERSION"
+    iosRuntime "com.gluonhq:charm-ios:$GLUON_VERSION"
+    desktopRuntime "com.gluonhq:charm-desktop:$GLUON_VERSION"
+}
+

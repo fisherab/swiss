@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.cell.*?>
+<?import javafx.scene.control.*?>
+<?import java.lang.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.cell.PropertyValueFactory ?>
+<?import javafx.collections.FXCollections ?>
+
+<BorderPane id="background" maxHeight="-Infinity" maxWidth="-Infinity"
+	minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0"
+	prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1"
+	fx:controller="uk.org.harwellcroquet.swiss.MainViewController">
+	<top>
+		<VBox BorderPane.alignment="CENTER">
+			<Label id="title" text="Swiss Tournament Organizer" />
+			<HBox>
+				<children>
+					<TextField fx:id="newPlayerName" />
+					<Button fx:id="addPlayer" mnemonicParsing="false" text="Add Player" />
+					<Button fx:id="go" alignment="CENTER_RIGHT" contentDisplay="RIGHT"
+						mnemonicParsing="false" text="Go" />
+				</children>
+			</HBox>
+		</VBox>
+	</top>
+	<center>
+		<TableView fx:id="table" prefHeight="200.0" prefWidth="200.0"
+			BorderPane.alignment="CENTER">
+			<columns>
+				<TableColumn prefWidth="75.0" text="Name">
+					<cellValueFactory>
+						<PropertyValueFactory property="name" />
+					</cellValueFactory>
+				</TableColumn>
+				<TableColumn prefWidth="75.0" text="Wins">
+					<cellValueFactory>
+						<PropertyValueFactory property="wins" />
+					</cellValueFactory>
+				</TableColumn>
+			</columns>
+		</TableView>
+	</center>
+	<bottom>
+		<Label fx:id="msg" BorderPane.alignment="CENTER" />
+	</bottom>
+
+
+</BorderPane>
