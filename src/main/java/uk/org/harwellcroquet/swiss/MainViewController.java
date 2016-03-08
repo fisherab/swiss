@@ -13,16 +13,17 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.BorderPane;
 import uk.org.harwellcroquet.swiss.logic.BasicSwiss;
 import uk.org.harwellcroquet.swiss.logic.SwissException;
 
-public class MainViewController implements Initializable {
+public class MainViewController implements Initializable, ControlledScreen {
 
 	@FXML
 	private Button go;
 
 	@FXML
-	private Button addPlayer;
+	private Button addPlayerButton;
 
 	@FXML
 	private TableView<PersonRecord> table;
@@ -33,16 +34,28 @@ public class MainViewController implements Initializable {
 	@FXML
 	private Label msg;
 
+	@FXML
+	private BorderPane bp;
+
+	@FXML
+	protected void addPlayer(ActionEvent event) {
+		data.add(new PersonRecord(newPlayerName.getText()));
+		newPlayerName.setText("");
+	}
+
 	private final ObservableList<PersonRecord> data = FXCollections.observableArrayList();
+
+	private ScreensController screensController;
 
 	@Override
 	public void initialize(URL url, ResourceBundle rb) {
+
 		table.setItems(data);
 
 		go.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent event) {
-				addPlayer.setDisable(true);
+				addPlayerButton.setDisable(true);
 				BasicSwiss sw = new BasicSwiss(7, 1000000000, 100);
 				try {
 					for (PersonRecord p : data) {
@@ -62,17 +75,20 @@ public class MainViewController implements Initializable {
 				} else {
 					msg.setText("Recommended rounds: " + recRounds);
 				}
+				screensController.setScreen("round");
 
 			}
 		});
 
-		addPlayer.setOnAction(new EventHandler<ActionEvent>() {
-			@Override
-			public void handle(ActionEvent event) {
-				data.add(new PersonRecord(newPlayerName.getText()));
-				newPlayerName.setText("");
-			}
-		});
+	}
+
+	@Override
+	public void setScreenParent(ScreensController screenPage) {
+		screensController = screenPage;
+		
+//		bp.prefWidthProperty().bind(screensController.widthProperty());
+//		bp.prefHeightProperty().bind(screensController.heightProperty());
+
 	}
 
 }

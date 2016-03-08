@@ -7,20 +7,17 @@
 <?import javafx.scene.control.cell.PropertyValueFactory ?>
 <?import javafx.collections.FXCollections ?>
 
-<BorderPane id="mainBackground" maxHeight="-Infinity" maxWidth="-Infinity" fx:id="bp"
-	minHeight="-Infinity" minWidth="-Infinity" prefHeight="800.0"
-	prefWidth="1200.0" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1"
-	fx:controller="uk.org.harwellcroquet.swiss.MainViewController">
+<BorderPane id="roundBackground" maxHeight="-Infinity"
+	maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
+	prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.40"
+	xmlns:fx="http://javafx.com/fxml/1" fx:controller="uk.org.harwellcroquet.swiss.RoundController">
 	<top>
 		<VBox BorderPane.alignment="CENTER">
 			<Label id="title" text="Swiss Tournament Organizer" />
 			<HBox>
 				<children>
-					<TextField fx:id="newPlayerName" />
 					<Button fx:id="addPlayerButton" mnemonicParsing="false"
 						onAction="#addPlayer" text="Add Player" />
-					<Button fx:id="go" alignment="CENTER_RIGHT" contentDisplay="RIGHT"
-						mnemonicParsing="false" text="Go" />
 				</children>
 			</HBox>
 		</VBox>
@@ -29,14 +26,19 @@
 		<TableView fx:id="table" prefHeight="200.0" prefWidth="200.0"
 			BorderPane.alignment="CENTER">
 			<columns>
-				<TableColumn prefWidth="75.0" text="Name">
+				<TableColumn prefWidth="75.0" text="Lawn">
 					<cellValueFactory>
-						<PropertyValueFactory property="name" />
+						<PropertyValueFactory property="lawn" />
 					</cellValueFactory>
 				</TableColumn>
-				<TableColumn prefWidth="75.0" text="Wins">
+				<TableColumn prefWidth="75.0" text="Player 1">
 					<cellValueFactory>
-						<PropertyValueFactory property="wins" />
+						<PropertyValueFactory property="player1" />
+					</cellValueFactory>
+				</TableColumn>
+				<TableColumn prefWidth="75.0" text="Player 2">
+					<cellValueFactory>
+						<PropertyValueFactory property="player2" />
 					</cellValueFactory>
 				</TableColumn>
 			</columns>

@@ -1,4 +1,4 @@
-#background {
+#mainBackground, #roundBackground {
 	-fx-background-color: palegreen;
 	-fx-border-width: 10;
 	-fx-padding: 20;
