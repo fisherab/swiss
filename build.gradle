@@ -13,7 +13,7 @@ buildscript {
 apply plugin: 'org.javafxports.jfxmobile'
 
 mainClassName = 'uk.org.harwellcroquet.swiss.SwissApp'
-version = '8u40'
+
 
 repositories {
     jcenter()

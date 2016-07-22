@@ -324,7 +324,6 @@ public class BasicSwiss {
 	}
 
 	public Map<String, Integer> getFinalRanking() {
-		computeRanking();
 		System.out.print("Ranking after last round (" + rounds.size() + ") ");
 		for (String name : ranking) {
 			System.out.print(name + ": " + players.get(name).getGames() + "  ");

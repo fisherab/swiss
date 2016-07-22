@@ -64,7 +64,6 @@ public class MainViewController implements Initializable, ControlledScreen {
 					sw.start();
 				} catch (SwissException e) {
 					msg.setText(e.getMessage());
-					;
 				}
 
 				int koRounds = sw.getKORounds();

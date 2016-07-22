@@ -6,15 +6,12 @@ import java.util.ResourceBundle;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
-import uk.org.harwellcroquet.swiss.logic.BasicSwiss;
-import uk.org.harwellcroquet.swiss.logic.SwissException;
 
 public class RoundController implements Initializable, ControlledScreen {
 

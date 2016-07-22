@@ -66,6 +66,7 @@ public class TestBasicSwiss {
 			System.out.println("Score in round " + (j + 1) + ": " + sw.getRound(j));
 
 		}
+
 		sw.computeRanking();
 		Map<String, Integer> fr = sw.getFinalRanking();
 		System.out.print("Final ranking ");
