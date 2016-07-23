@@ -56,7 +56,7 @@ public class MainViewController implements Initializable, ControlledScreen {
 			@Override
 			public void handle(ActionEvent event) {
 				addPlayerButton.setDisable(true);
-				BasicSwiss sw = new BasicSwiss(7, 1000000000, 100);
+				BasicSwiss sw = new BasicSwiss(7, 1000000000, 100, 3);
 				try {
 					for (PersonRecord p : data) {
 						sw.addPlayer(p.getName());
@@ -84,9 +84,9 @@ public class MainViewController implements Initializable, ControlledScreen {
 	@Override
 	public void setScreenParent(ScreensController screenPage) {
 		screensController = screenPage;
-		
-//		bp.prefWidthProperty().bind(screensController.widthProperty());
-//		bp.prefHeightProperty().bind(screensController.heightProperty());
+
+		// bp.prefWidthProperty().bind(screensController.widthProperty());
+		// bp.prefHeightProperty().bind(screensController.heightProperty());
 
 	}
 

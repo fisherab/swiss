@@ -15,6 +15,10 @@ import java.util.Set;
 
 public class BasicSwiss {
 
+	public enum Colours {
+		PRIMARY, SECONDARY
+	};
+
 	enum Status {
 		STARTED, SETTING_UP
 	};
@@ -41,19 +45,25 @@ public class BasicSwiss {
 
 	private int numGood;
 
-	public BasicSwiss(int byeScore, int maxCombis, int enoughGood) {
+	private int numLawns;
+
+	public BasicSwiss(int byeScore, int maxCombis, int enoughGood, int numLawns) {
 		this.byeScore = byeScore;
 		this.maxCombis = BigInteger.valueOf(maxCombis);
 		this.enoughGood = enoughGood;
+		this.numLawns = numLawns;
 	}
 
-	public void addPlayer(String name) throws SwissException {
+	public void addPlayer(String name, Colours col) throws SwissException {
 		if (players.containsKey(name)) {
 			throw new SwissException("Player " + name + " already present");
 		} else if (name.equals("Bye")) {
 			throw new SwissException("The player name 'Bye' is reserved");
 		}
-		players.put(name, new Player(name));
+		if (col != null) {
+			System.out.println(name + " will get " + col);
+		}
+		players.put(name, new Player(name, col));
 	}
 
 	/** Create first round (numbered 0) and add it to rounds list */
@@ -61,7 +71,7 @@ public class BasicSwiss {
 		if (status == Status.SETTING_UP) {
 			status = Status.STARTED;
 			if (players.size() % 2 == 1) {
-				players.put("Bye", new Player("Bye"));
+				players.put("Bye", new Player("Bye", null));
 			}
 			List<PersonScore> round = new ArrayList<>();
 			for (String name : players.keySet()) {
@@ -108,7 +118,9 @@ public class BasicSwiss {
 				players.get(p2.getName()).incrementGames();
 			}
 			players.get(p1.getName()).addPlayed(p2.getName());
+			players.get(p1.getName()).addHoops(p1.getScore());
 			players.get(p2.getName()).addPlayed(p1.getName());
+			players.get(p2.getName()).addHoops(p2.getScore());
 		}
 		for (int i = maxScore; i >= 0; i--) {
 			for (PersonScore ps : round) {
@@ -324,12 +336,6 @@ public class BasicSwiss {
 	}
 
 	public Map<String, Integer> getFinalRanking() {
-		System.out.print("Ranking after last round (" + rounds.size() + ") ");
-		for (String name : ranking) {
-			System.out.print(name + ": " + players.get(name).getGames() + "  ");
-		}
-		System.out.println();
-
 		Map<Integer, Set<Player>> r = new HashMap<>();
 
 		for (Player p : players.values()) {
@@ -405,9 +411,9 @@ public class BasicSwiss {
 		}
 
 		if (set.size() == 2) {
+			String n1 = set.get(0).getName();
+			String n2 = set.get(1).getName();
 			if (wins == 1) {
-				String n1 = set.get(0).getName();
-				String n2 = set.get(1).getName();
 				if (names.get(n1) > names.get(n2)) {
 					System.out.println(", " + n1 + " beat " + n2 + " in a round");
 					return n1;
@@ -416,8 +422,7 @@ public class BasicSwiss {
 					return n2;
 				}
 			} else {
-				System.out.println(", draw");
-				return null;
+				return mostHooper(set);
 			}
 		} else {// Three or more in tie
 			System.out.print(", games won in tie " + names);
@@ -435,8 +440,7 @@ public class BasicSwiss {
 						if (best == null) {
 							best = name.getKey();
 						} else {
-							System.out.println(", draw");
-							return null;
+							return mostHooper(set);
 						}
 					}
 				}
@@ -451,8 +455,7 @@ public class BasicSwiss {
 						if (best == null) {
 							best = name.getKey();
 						} else {
-							System.out.println(", draw");
-							return null;
+							return mostHooper(set);
 						}
 					}
 				}
@@ -460,10 +463,159 @@ public class BasicSwiss {
 					System.out.println(", " + best + " beat others in tie ");
 					return best;
 				} else {
+					return mostHooper(set);
+				}
+			}
+		}
+
+	}
+
+	private String mostHooper(List<Player> set) {
+		int maxHoops = 0;
+		for (Player p : set) {
+			int hoops = p.getHoops();
+			if (hoops > maxHoops) {
+				maxHoops = hoops;
+			}
+		}
+		String best = null;
+		for (Player p : set) {
+			if (p.getHoops() == maxHoops) {
+				if (best == null) {
+					best = p.getName();
+				} else {
 					System.out.println(", draw");
 					return null;
 				}
 			}
+		}
+		System.out.println(", " + best + " got most hoops");
+		return best;
+	}
+
+	public void addPlayer(String name) throws SwissException {
+		addPlayer(name, null);
+	}
+
+	public void makeGamesChoices(List<PersonScore> round) {
+		int numPrimarys = numLawns;
+		int numSecondarys = numLawns;
+		List<Game> games = new ArrayList<>();
+		String bye = null;
+		int ngame = 1;
+		for (int i = 0; i < round.size() / 2; i++) {
+			PersonScore p1 = round.get(2 * i);
+			PersonScore p2 = round.get(2 * i + 1);
+			if (p1.getName().equals("Bye")) {
+				bye = p2.getName();
+			} else if (p2.getName().equals("Bye")) {
+				bye = p1.getName();
+			} else {
+				games.add(new Game(p1.getName(), p2.getName(), ngame++));
+			}
+		}
+		for (Game game : games) {
+			Player p1 = players.get(game.getName1());
+			Player p2 = players.get(game.getName2());
+			if ((p1.getColours() == Colours.PRIMARY || p2.getColours() == Colours.PRIMARY)
+					&& (p1.getColours() != Colours.SECONDARY && p2.getColours() != Colours.SECONDARY)) {
+				game.setColours(Colours.PRIMARY);
+				p1.incPrimarys();
+				p2.incPrimarys();
+				numPrimarys--;
+			} else if ((p1.getColours() == Colours.SECONDARY || p2.getColours() == Colours.SECONDARY)
+					&& (p1.getColours() != Colours.PRIMARY && p2.getColours() != Colours.PRIMARY)) {
+				game.setColours(Colours.SECONDARY);
+				p1.incSecondarys();
+				p2.incSecondarys();
+				numSecondarys--;
+			}
+		}
+		for (Game game : games) {
+			if (game.getColours() == null) {
+				Player p1 = players.get(game.getName1());
+				Player p2 = players.get(game.getName2());
+				if (numPrimarys > 0 && numSecondarys > 0) {
+					if (p1.getPrimaryExcess() + p2.getPrimaryExcess() > 0) {
+						game.setColours(Colours.SECONDARY);
+						p1.incSecondarys();
+						p2.incSecondarys();
+						numSecondarys--;
+					} else {
+						game.setColours(Colours.PRIMARY);
+						p1.incPrimarys();
+						p2.incPrimarys();
+						numPrimarys--;
+					}
+				} else if (numPrimarys > 0) {
+					game.setColours(Colours.PRIMARY);
+					p1.incPrimarys();
+					p2.incPrimarys();
+					numPrimarys--;
+				} else {
+					game.setColours(Colours.SECONDARY);
+					p1.incSecondarys();
+					p2.incSecondarys();
+					numSecondarys--;
+				}
+			}
+		}
+		Set<Integer> lawnPos = new HashSet<>();
+		for (int i = 0; i < numLawns; i++) {
+			lawnPos.add(2 * i);
+			lawnPos.add(2 * i + 1);
+		}
+		for (Game game : games) {
+			Player p1 = players.get(game.getName1());
+			Player p2 = players.get(game.getName2());
+			int count = 0;
+			int best = -1;
+			for (int lawn : lawnPos) {
+				if ((game.getColours() == Colours.PRIMARY && lawn < numLawns)
+						|| (game.getColours() == Colours.SECONDARY && lawn >= numLawns)) {
+					int lawnsCount = p1.getLawnCount(lawn) + p2.getLawnCount(lawn);
+					if (best == -1 || lawnsCount < count)
+						best = lawn;
+					count = lawnsCount;
+				}
+			}
+			p1.incLawnCount(best % numLawns);
+			p2.incLawnCount(best % numLawns);
+			lawnPos.remove(best);
+			game.setLawn(best % numLawns);
+		}
+		for (int i = 0; i < numLawns; i++) {
+			int numStarts = -1;
+			Game first = null;
+			for (Game game : games) {
+				if (game.getLawn() == i) {
+					Player p1 = players.get(game.getName1());
+					Player p2 = players.get(game.getName2());
+					if (numStarts == -1) {
+						numStarts = p1.getStartCount() + p2.getStartCount();
+						first = game;
+					} else {
+						if (numStarts >= p1.getStartCount() + p2.getStartCount()) {
+							game.setStart();
+							p1.incStartCount();
+							p2.incStartCount();
+						} else {
+							first.setStart();
+							players.get(first.getName1()).incStartCount();
+							players.get(first.getName2()).incStartCount();
+						}
+					}
+				}
+			}
+		}
+		for (Game game : games) {
+			System.out.println("Game " + game.getSquare() + ": " + game.getName1() + " vs " + game.getName2() + " "
+					+ game.getColours() + " on lawn " + (game.getLawn() + 1) + " go "
+					+ (game.getStart() ? "first" : "second"));
+
+		}
+		if (bye != null) {
+			System.out.println(bye + " gets a bye");
 		}
 
 	}

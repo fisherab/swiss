@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import uk.org.harwellcroquet.swiss.logic.BasicSwiss;
+import uk.org.harwellcroquet.swiss.logic.BasicSwiss.Colours;
 import uk.org.harwellcroquet.swiss.logic.PersonScore;
 import uk.org.harwellcroquet.swiss.logic.SwissException;
 
@@ -16,23 +17,30 @@ public class Cmd {
 		int byeScore = Integer.parseInt(c.readLine("byeScore: "));
 		int maxCombis = Integer.parseInt(c.readLine("maxCombis: "));
 		int enoughGood = Integer.parseInt(c.readLine("enoughGood: "));
-		BasicSwiss game = new BasicSwiss(byeScore, maxCombis, enoughGood);
+		int numLawns = Integer.parseInt(c.readLine("numLawns: "));
+		BasicSwiss tournament = new BasicSwiss(byeScore, maxCombis, enoughGood, numLawns);
 		while (true) {
-			String player = c.readLine("player (empty to end): ");
+			String player = c.readLine("player (empty to end, finish name with -P or -S if CVD): ");
 			if (player.isEmpty()) {
 				break;
 			}
-			game.addPlayer(player);
+			if (player.endsWith("-P")) {
+				tournament.addPlayer(player.substring(0, player.length() - 3), Colours.PRIMARY);
+			} else if (player.endsWith("-S")) {
+				tournament.addPlayer(player.substring(0, player.length() - 3), Colours.SECONDARY);
+			} else {
+				tournament.addPlayer(player);
+			}
 		}
-		System.out.println("Rounds KO: " + game.getKORounds() + " Max :" + game.getMaxRounds());
-		game.start();
+		System.out.println("Rounds KO: " + tournament.getKORounds() + " Max :" + tournament.getMaxRounds());
+		tournament.start();
 
 		int roundNum = 1;
 
 		while (true) {
-			List<PersonScore> round = game.getRound(roundNum - 1);
-			game.setByeScores();
-			preRoundPrint(round);
+			List<PersonScore> round = tournament.getRound(roundNum - 1);
+			tournament.setByeScores();
+			tournament.makeGamesChoices(round);
 			outer: while (true) {
 				try {
 					int gameNum = Integer.parseInt(c.readLine("Game number (0 to continue) "));
@@ -76,27 +84,27 @@ public class Cmd {
 						}
 					}
 				} catch (NumberFormatException e) {
-					preRoundPrint(game.getRound(0));
+					System.out.println("That's not a number");
 				}
 			}
 
-			game.computeRanking();
+			tournament.computeRanking();
 			System.out.print("Ranking after round " + roundNum + " ");
-			for (String name : game.getRanking()) {
-				System.out.print(name + ": " + game.getPlayers().get(name).getGames() + "  ");
+			for (String name : tournament.getRanking()) {
+				System.out.print(name + ": " + tournament.getPlayers().get(name).getGames() + "  ");
 			}
 			System.out.println();
 			if (c.readLine("Enter FINISHED to end ").equals("FINISHED")) {
 				break;
 			}
-			game.prepareRound();
+			tournament.prepareRound();
 			roundNum++;
 		}
-		
-		Map<String, Integer> fr = game.getFinalRanking();
+
+		Map<String, Integer> fr = tournament.getFinalRanking();
 		System.out.print("Final ranking ");
 		boolean first = true;
-		for (int i = 1; i <= game.getPlayers().size(); i++) {
+		for (int i = 1; i <= tournament.getPlayers().size(); i++) {
 			for (Entry<String, Integer> entry : fr.entrySet()) {
 				if (entry.getValue() == i) {
 					if (!first) {
@@ -109,27 +117,6 @@ public class Cmd {
 			}
 		}
 		System.out.println();
-	}
-
-	private static void preRoundPrint(List<PersonScore> round) {
-		String bye = null;
-		int ngame = 1;
-		for (int i = 0; i < round.size() / 2; i++) {
-			PersonScore p1 = round.get(2 * i);
-			PersonScore p2 = round.get(2 * i + 1);
-			if (p1.getName().equals("Bye")) {
-				bye = p2.getName();
-			} else if (p2.getName().equals("Bye")) {
-				bye = p1.getName();
-			} else {
-				System.out.println("Game " + ngame++ + ": " + p1 + " vs " + p2);
-			}
-
-		}
-		if (bye != null) {
-			System.out.println(bye + " gets a bye");
-		}
-
 	}
 
 }

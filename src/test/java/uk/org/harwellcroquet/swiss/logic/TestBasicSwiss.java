@@ -8,14 +8,15 @@ import java.util.Random;
 import org.junit.Test;
 
 import uk.org.harwellcroquet.swiss.logic.BasicSwiss;
+import uk.org.harwellcroquet.swiss.logic.BasicSwiss.Colours;
 
 public class TestBasicSwiss {
 
 	@Test
 	public void testCreate() throws Exception {
-		BasicSwiss sw = new BasicSwiss(7, 1000000000, 100);
-		sw.addPlayer("A");
-		sw.addPlayer("B");
+		BasicSwiss sw = new BasicSwiss(7, 1000000000, 100, 3);
+		sw.addPlayer("A", Colours.PRIMARY);
+		sw.addPlayer("B", Colours.SECONDARY);
 		sw.addPlayer("C");
 		sw.addPlayer("D");
 		sw.addPlayer("E");
@@ -48,6 +49,7 @@ public class TestBasicSwiss {
 			}
 			List<PersonScore> round = sw.getRound(j);
 			sw.setByeScores();
+			sw.makeGamesChoices(round);
 			int ngames = round.size() / 2;
 			Random rand = new Random();
 			for (int i = 0; i < ngames; i++) {
