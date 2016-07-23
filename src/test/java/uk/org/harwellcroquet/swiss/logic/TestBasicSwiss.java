@@ -1,5 +1,6 @@
 package uk.org.harwellcroquet.swiss.logic;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -71,21 +72,29 @@ public class TestBasicSwiss {
 
 		sw.computeRanking();
 		Map<String, Integer> fr = sw.getFinalRanking();
-		System.out.print("Final ranking ");
-		boolean first = true;
+		
+ 
+		System.out.format("%n                        W   H   Lawns     P+  S%n");
+
 		for (int i = 1; i <= sw.getPlayers().size(); i++) {
 			for (Entry<String, Integer> entry : fr.entrySet()) {
 				if (entry.getValue() == i) {
-					if (!first) {
-						System.out.print(", ");
-					} else {
-						first = false;
+					String name = entry.getKey();
+					int pos = entry.getValue();
+					Player p = sw.getPlayers().get(name);
+					int wins = p.getGames();
+					int hoops = p.getHoops();
+					int prim = p.getPrimaryExcess();
+					List<Integer> lawns = new ArrayList<>();
+					for (int j = 0; j < 3; j++) {
+						lawns.add(p.getLawnCount(j));
 					}
-					System.out.print(entry);
+					int starts = p.getStartCount();
+
+					System.out.format("%2d %-20s %1d : %2d %-10s %2d %2d%n", pos, name, wins, hoops, lawns.toString(), prim, starts);
 				}
 			}
 		}
-		System.out.println();
 
 	}
 

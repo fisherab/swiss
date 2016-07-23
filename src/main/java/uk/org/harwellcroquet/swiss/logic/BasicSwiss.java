@@ -518,13 +518,13 @@ public class BasicSwiss {
 			Player p1 = players.get(game.getName1());
 			Player p2 = players.get(game.getName2());
 			if ((p1.getColours() == Colours.PRIMARY || p2.getColours() == Colours.PRIMARY)
-					&& (p1.getColours() != Colours.SECONDARY && p2.getColours() != Colours.SECONDARY)) {
+					&& (p1.getColours() != Colours.SECONDARY || p2.getColours() != Colours.SECONDARY)) {
 				game.setColours(Colours.PRIMARY);
 				p1.incPrimarys();
 				p2.incPrimarys();
 				numPrimarys--;
 			} else if ((p1.getColours() == Colours.SECONDARY || p2.getColours() == Colours.SECONDARY)
-					&& (p1.getColours() != Colours.PRIMARY && p2.getColours() != Colours.PRIMARY)) {
+					&& (p1.getColours() != Colours.PRIMARY || p2.getColours() != Colours.PRIMARY)) {
 				game.setColours(Colours.SECONDARY);
 				p1.incSecondarys();
 				p2.incSecondarys();

@@ -7,9 +7,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import uk.org.harwellcroquet.swiss.logic.BasicSwiss;
-import uk.org.harwellcroquet.swiss.logic.Game;
 import uk.org.harwellcroquet.swiss.logic.BasicSwiss.Colours;
 import uk.org.harwellcroquet.swiss.logic.PersonScore;
+import uk.org.harwellcroquet.swiss.logic.Player;
 import uk.org.harwellcroquet.swiss.logic.SwissException;
 
 public class Cmd {
@@ -91,7 +91,7 @@ public class Cmd {
 						PersonScore p1 = round.get(2 * i);
 						PersonScore p2 = round.get(2 * i + 1);
 						if (!p1.getName().equals("Bye") && !p2.getName().equals("Bye")) {
-							System.out.println("Game " + ngame++ + ": " + p1.getName() + " vs " + p2.getName());
+							System.out.println("Game " + ngame++ + ": " + p1 + " vs " + p2);
 						}
 					}
 				}
@@ -111,21 +111,28 @@ public class Cmd {
 		}
 
 		Map<String, Integer> fr = tournament.getFinalRanking();
-		System.out.print("Final ranking ");
-		boolean first = true;
+		System.out.format("%n                        W   H   Lawns     P+  S%n");
+
 		for (int i = 1; i <= tournament.getPlayers().size(); i++) {
 			for (Entry<String, Integer> entry : fr.entrySet()) {
 				if (entry.getValue() == i) {
-					if (!first) {
-						System.out.print(", ");
-					} else {
-						first = false;
+					String name = entry.getKey();
+					int pos = entry.getValue();
+					Player p = tournament.getPlayers().get(name);
+					int wins = p.getGames();
+					int hoops = p.getHoops();
+					int prim = p.getPrimaryExcess();
+					List<Integer> lawns = new ArrayList<>();
+					for (int j = 0; j < numLawns; j++) {
+						lawns.add(p.getLawnCount(j));
 					}
-					System.out.print(entry);
+					int starts = p.getStartCount();
+
+					System.out.format("%2d %-20s %1d : %2d %-10s %2d %2d%n", pos, name, wins, hoops, lawns.toString(),
+							prim, starts);
 				}
 			}
 		}
-		System.out.println();
 	}
 
 }
