@@ -586,12 +586,14 @@ public class BasicSwiss {
 		}
 		for (int i = 0; i < numLawns; i++) {
 			int numStarts = -1;
+			int found = 0;
 			Game first = null;
 			for (Game game : games) {
 				if (game.getLawn() == i) {
+					found++;
 					Player p1 = players.get(game.getName1());
 					Player p2 = players.get(game.getName2());
-					if (numStarts == -1) {
+					if (found == 1) {
 						numStarts = p1.getStartCount() + p2.getStartCount();
 						first = game;
 					} else {
@@ -606,6 +608,11 @@ public class BasicSwiss {
 						}
 					}
 				}
+			}
+			if (found == 1) {
+				first.setStart();
+				players.get(first.getName1()).incStartCount();
+				players.get(first.getName2()).incStartCount();
 			}
 		}
 		for (Game game : games) {

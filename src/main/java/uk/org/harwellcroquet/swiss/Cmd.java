@@ -1,11 +1,13 @@
 package uk.org.harwellcroquet.swiss;
 
 import java.io.Console;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import uk.org.harwellcroquet.swiss.logic.BasicSwiss;
+import uk.org.harwellcroquet.swiss.logic.Game;
 import uk.org.harwellcroquet.swiss.logic.BasicSwiss.Colours;
 import uk.org.harwellcroquet.swiss.logic.PersonScore;
 import uk.org.harwellcroquet.swiss.logic.SwissException;
@@ -84,7 +86,14 @@ public class Cmd {
 						}
 					}
 				} catch (NumberFormatException e) {
-					System.out.println("That's not a number");
+					int ngame = 1;
+					for (int i = 0; i < round.size() / 2; i++) {
+						PersonScore p1 = round.get(2 * i);
+						PersonScore p2 = round.get(2 * i + 1);
+						if (!p1.getName().equals("Bye") && !p2.getName().equals("Bye")) {
+							System.out.println("Game " + ngame++ + ": " + p1.getName() + " vs " + p2.getName());
+						}
+					}
 				}
 			}
 
