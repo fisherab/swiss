@@ -111,7 +111,7 @@ public class Cmd {
 		}
 
 		Map<String, Integer> fr = tournament.getFinalRanking();
-		System.out.format("%n                        W   H   Lawns     P+  S%n");
+		System.out.println();
 
 		for (int i = 1; i <= tournament.getPlayers().size(); i++) {
 			for (Entry<String, Integer> entry : fr.entrySet()) {
@@ -128,8 +128,8 @@ public class Cmd {
 					}
 					int starts = p.getStartCount();
 
-					System.out.format("%2d %-20s %1d : %2d %-10s %2d %2d%n", pos, name, wins, hoops, lawns.toString(),
-							prim, starts);
+					System.out.format("%2d %s %d : %d %s %d %d%n", pos, name, wins, hoops, lawns.toString(), prim,
+							starts);
 				}
 			}
 		}
