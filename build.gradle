@@ -1,11 +1,11 @@
 plugins {
-    id 'java-library'
-    id 'eclipse'
+    id 'java'
+        id 'eclipse'
 }
 
 java {
     sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
 }
 
 test {
@@ -13,9 +13,15 @@ test {
 }
 
 repositories {
-	mavenCentral()
+    mavenCentral()
 }
 
 dependencies {
-   testImplementation('org.junit.jupiter:junit-jupiter:5.6.2')
+    testImplementation('org.junit.jupiter:junit-jupiter:5.6.2')
+}
+
+jar {
+    manifest {
+        attributes('Main-Class': 'uk.org.stevefisher.swiss.Cmd')
+    }
 }
