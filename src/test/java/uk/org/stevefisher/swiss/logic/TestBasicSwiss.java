@@ -1,4 +1,4 @@
-package uk.org.harwellcroquet.swiss.logic;
+package uk.org.stevefisher.swiss.logic;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,10 +6,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import uk.org.harwellcroquet.swiss.logic.BasicSwiss;
-import uk.org.harwellcroquet.swiss.logic.BasicSwiss.Colours;
+import uk.org.stevefisher.swiss.logic.BasicSwiss.Colours;
 
 public class TestBasicSwiss {
 

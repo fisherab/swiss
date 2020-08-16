@@ -1,4 +1,4 @@
-package uk.org.harwellcroquet.swiss.logic;
+package uk.org.stevefisher.swiss.logic;
 
 @SuppressWarnings("serial")
 public class SwissException extends Exception {

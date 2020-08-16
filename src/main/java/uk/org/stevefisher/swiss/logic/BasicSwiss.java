@@ -1,4 +1,4 @@
-package uk.org.harwellcroquet.swiss.logic;
+package uk.org.stevefisher.swiss.logic;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -333,6 +333,10 @@ public class BasicSwiss {
 
 	public int getMaxRounds() {
 		return players.size() - 1;
+	}
+
+	public int getRecRounds() {
+		return Math.min(getKORounds() + 2, getMaxRounds());
 	}
 
 	public Map<String, Integer> getFinalRanking() {

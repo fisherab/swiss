@@ -1,11 +1,11 @@
-package uk.org.harwellcroquet.swiss.logic;
+package uk.org.stevefisher.swiss.logic;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import uk.org.harwellcroquet.swiss.logic.BasicSwiss.Colours;
+import uk.org.stevefisher.swiss.logic.BasicSwiss.Colours;
 
 public class Player {
 

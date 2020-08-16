@@ -1,6 +1,6 @@
-package uk.org.harwellcroquet.swiss.logic;
+package uk.org.stevefisher.swiss.logic;
 
-import uk.org.harwellcroquet.swiss.logic.BasicSwiss.Colours;
+import uk.org.stevefisher.swiss.logic.BasicSwiss.Colours;
 
 public class Game {
 
