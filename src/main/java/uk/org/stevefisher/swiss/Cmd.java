@@ -74,28 +74,25 @@ public class Cmd {
 
 		boolean finished = false;
 		while (!finished) {
+			System.out.println("Starting round " + roundNum);
 			List<PersonScore> round = tournament.getRound(roundNum - 1);
 			tournament.setByeScores();
 			tournament.makeGamesChoices(round);
 			boolean roundInProgress = true;
 			while (roundInProgress) {
-				try {
-					int gameNum = Integer.parseInt(readLine("Game number (0 to continue) "));
-					if (gameNum == 0) {
-						if (isExitAllowed(round)) {
-							roundInProgress = false;
-						}
-					} else {
-						storeScores(round, gameNum);
+				String cmd = readLine("Game number, S(tatus), E(nd round) ").toUpperCase().trim();
+				if ("S".equals(cmd)) {
+					printStatus(round);
+				} else if ("E".equals(cmd)) {
+					if (isExitAllowed(round)) {
+						roundInProgress = false;
 					}
-				} catch (NumberFormatException e) {
-					int ngame = 1;
-					for (int i = 0; i < round.size() / 2; i++) {
-						PersonScore p1 = round.get(2 * i);
-						PersonScore p2 = round.get(2 * i + 1);
-						if (!p1.getName().equals("Bye") && !p2.getName().equals("Bye")) {
-							System.out.println("Game " + ngame++ + ": " + p1 + " vs " + p2);
-						}
+				} else {
+					try {
+						int gameNum = Integer.parseInt(cmd);
+						storeScores(round, gameNum);
+					} catch (NumberFormatException e) {
+						System.out.println("Invalid input");
 					}
 				}
 			}
@@ -106,11 +103,17 @@ public class Cmd {
 				System.out.print(name + ": " + tournament.getPlayers().get(name).getGames() + "  ");
 			}
 			System.out.println();
-			if (readLine("Enter FINISHED to end ").equals("FINISHED")) {
-				finished = true;
-			} else {
-				tournament.prepareRound();
-				roundNum++;
+			boolean finishChoiceMade = false;
+			while (!finishChoiceMade) {
+				String cmd = readLine("FINISH (tournament), NEXT (to start next round) ").toUpperCase().trim();
+				if ("FINISH".equals(cmd)) {
+					finished = true;
+					finishChoiceMade = true;
+				} else if ("NEXT".equals(cmd)) {
+					tournament.prepareRound();
+					roundNum++;
+					finishChoiceMade = true;
+				}
 			}
 		}
 
@@ -135,6 +138,17 @@ public class Cmd {
 					System.out.format("%2d %s %d : %d %s %d %d%n", pos, name, wins, hoops, lawns.toString(), prim,
 							starts);
 				}
+			}
+		}
+	}
+
+	private static void printStatus(List<PersonScore> round) {
+		int ngame = 1;
+		for (int i = 0; i < round.size() / 2; i++) {
+			PersonScore p1 = round.get(2 * i);
+			PersonScore p2 = round.get(2 * i + 1);
+			if (!p1.getName().equals("Bye") && !p2.getName().equals("Bye")) {
+				System.out.println("Game " + ngame++ + ": " + p1 + " vs " + p2);
 			}
 		}
 	}

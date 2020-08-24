@@ -78,7 +78,7 @@ public class BasicSwiss {
 				PersonScore ps = new PersonScore(name);
 				round.add(ps);
 			}
-			Collections.shuffle(round);
+// TODO			Collections.shuffle(round);
 			rounds.add(round);
 		} else {
 			throw new SwissException("Invalid status for start to be called");
@@ -210,6 +210,7 @@ public class BasicSwiss {
 		}
 
 		if (p2 == null) {
+			// There were clashes so compute set of all possible (i.e. non-played) games
 			Set<Game> games = new HashSet<>();
 			for (String name1 : players.keySet()) {
 				for (String name2 : players.keySet()) {
@@ -220,12 +221,14 @@ public class BasicSwiss {
 				}
 			}
 
-			int ngames = players.size() / 2;
-			combis = binomial(games.size(), ngames);
+			// These games could be played in any order - work out how many combinations and print for information
+			int gamesPerRound = players.size() / 2;
+			combis = binomial(games.size(), gamesPerRound);
 			System.out.print("There are " + games.size() + " with " + combis + " combinations. "
 					+ (combis.compareTo(maxCombis) > 0 ? "Truncate. " : ""));
 			numGood = 0;
 
+			// Sort the games by fairness i.e. how close in ranking
 			Game[] gameList = games.toArray(new Game[0]);
 			Arrays.sort(gameList, new Comparator<Game>() {
 				@Override
@@ -237,7 +240,8 @@ public class BasicSwiss {
 			bestGames = null;
 			bestSumSquares = 0;
 
-			combinations2(gameList, ngames, 0, new Game[ngames]);
+			// Compute bestGames via recursive call
+			combinations2(gameList, gamesPerRound, 0, new Game[gamesPerRound]);
 
 			System.out.println("Best is " + Arrays.toString(bestGames));
 			round.clear();
@@ -257,7 +261,16 @@ public class BasicSwiss {
 		return ret;
 	}
 
+	/**
+	 * Recursive function to set bestGames
+	 * @param arr Array of possible Games
+	 * @param len number of games left to identify
+	 * @param startPosition
+	 * @param result
+	 * @return
+	 */
 	boolean combinations2(Game[] arr, int len, int startPosition, Game[] result) {
+// TODO		System.out.println(len + " " + startPosition + " " +  result.length);
 		if (len == 0) {
 			Set<String> names = new HashSet<>();
 			boolean good = true;
@@ -278,6 +291,7 @@ public class BasicSwiss {
 					bestSumSquares = sum;
 				}
 				if (combis.compareTo(maxCombis) > 0) {
+// TODO					System.out.println("Goods " + numGood + " " + enoughGood);
 					if (numGood > enoughGood) {
 						return false;
 					}
