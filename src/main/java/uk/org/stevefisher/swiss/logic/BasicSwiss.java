@@ -3,13 +3,11 @@ package uk.org.stevefisher.swiss.logic;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigInteger;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -270,7 +268,7 @@ public class BasicSwiss {
 				combResult = combinationsThree(games, gamesPerRound,
 						combis.compareTo(maxCombis) > 0 ? enoughGood : null);
 			}
-			logger.debug("Best is {}", combResult.bestGames);
+			System.out.println("Best is " + combResult.bestGames);
 
 			round.clear();
 
@@ -725,7 +723,8 @@ public class BasicSwiss {
 				} else if (p1.getScore() < p2.getScore()) {
 					f.write(p2.getName() + ",beat," + p1.getName() + "," + p2.getScore() + "," + p1.getScore() + "\n");
 				} else {
-					f.write(p1.getName() + ",draws with," + p2.getName() + "," + p1.getScore() + "," + p2.getScore() + "\n");
+					f.write(p1.getName() + ",draws with," + p2.getName() + "," + p1.getScore() + "," + p2.getScore()
+							+ "\n");
 				}
 			}
 		} catch (IOException e) {

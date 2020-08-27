@@ -116,6 +116,9 @@ public class Cmd {
 			System.out.println();
 			boolean finishChoiceMade = false;
 			while (!finishChoiceMade) {
+				if (roundNum >= tournament.getRecRounds()) {
+					System.out.println("You have completed the recommended number of rounds.");
+				}
 				String cmd = readLine("FINISH (tournament), NEXT (to start next round) ").toUpperCase().trim();
 				if ("FINISH".equals(cmd)) {
 					finished = true;
@@ -182,7 +185,7 @@ public class Cmd {
 				// NOP
 			} else if (gameNum == ngame++) {
 				if (p1.getScore() != 0 || p2.getScore() != 0) {
-					if (!readLine("Enter OVERWRITE to change score ").equals("OVERWRITE")) {
+					if (!readLine("Enter OVERWRITE to change score ").toUpperCase().trim().equals("OVERWRITE")) {
 						return;
 					}
 				}
