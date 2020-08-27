@@ -2,7 +2,6 @@ package uk.org.stevefisher.swiss.logic;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -13,7 +12,35 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.apache.commons.math3.util.CombinatoricsUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class BasicSwiss {
+
+	public static class CombResult {
+
+		Boolean more;
+		int numGood;
+		public Set<Game> bestGames;
+		public long bestSumSquares;
+
+		public CombResult(Boolean more, int numGood, Set<Game> bestGames, long bestSumSquares) {
+			this.more = more;
+			this.numGood = numGood;
+			this.bestGames = bestGames;
+			this.bestSumSquares = bestSumSquares;
+		}
+
+		@Override
+		public String toString() {
+			return "More:" + more + " numGood:" + numGood + " bestGames:" + bestGames + " bestSumSquares:"
+					+ bestSumSquares;
+		}
+
+	}
+
+	private static final Logger logger = LogManager.getLogger(BasicSwiss.class);
 
 	public enum Colours {
 		PRIMARY, SECONDARY
@@ -33,21 +60,15 @@ public class BasicSwiss {
 
 	private ArrayList<String> ranking;
 
-	private Game[] bestGames;
-
-	private int bestSumSquares;
-
 	private BigInteger maxCombis;
 
-	private int enoughGood;
+	private Integer enoughGood;
 
 	private BigInteger combis;
 
-	private int numGood;
-
 	private int numLawns;
 
-	public BasicSwiss(int byeScore, int maxCombis, int enoughGood, int numLawns) {
+	public BasicSwiss(int byeScore, int maxCombis, Integer enoughGood, int numLawns) {
 		this.byeScore = byeScore;
 		this.maxCombis = BigInteger.valueOf(maxCombis);
 		this.enoughGood = enoughGood;
@@ -61,7 +82,7 @@ public class BasicSwiss {
 			throw new SwissException("The player name 'Bye' is reserved");
 		}
 		if (col != null) {
-			System.out.println(name + " will get " + col);
+			logger.info(name + " will get " + col);
 		}
 		players.put(name, new Player(name, col));
 	}
@@ -78,7 +99,7 @@ public class BasicSwiss {
 				PersonScore ps = new PersonScore(name);
 				round.add(ps);
 			}
-// TODO			Collections.shuffle(round);
+			Collections.shuffle(round);
 			rounds.add(round);
 		} else {
 			throw new SwissException("Invalid status for start to be called");
@@ -211,49 +232,55 @@ public class BasicSwiss {
 
 		if (p2 == null) {
 			// There were clashes so compute set of all possible (i.e. non-played) games
-			Set<Game> games = new HashSet<>();
+			List<Game> games = new ArrayList<>();
 			for (String name1 : players.keySet()) {
 				for (String name2 : players.keySet()) {
 					if (name1.compareTo(name2) < 0 && players.get(name1).hasNotPlayed(name2)) {
-						int i = ranking.indexOf(name1) - ranking.indexOf(name2) - 1;
+						int i = ranking.indexOf(name1) - ranking.indexOf(name2);
 						games.add(new Game(name1, name2, i * i));
 					}
 				}
 			}
 
-			// These games could be played in any order - work out how many combinations and print for information
+			// These games could be played in any order - work out how many combinations and
+			// print for information
 			int gamesPerRound = players.size() / 2;
-			combis = binomial(games.size(), gamesPerRound);
+			combis = cNR(games.size(), gamesPerRound);
 			System.out.print("There are " + games.size() + " with " + combis + " combinations. "
 					+ (combis.compareTo(maxCombis) > 0 ? "Truncate. " : ""));
-			numGood = 0;
 
 			// Sort the games by fairness i.e. how close in ranking
-			Game[] gameList = games.toArray(new Game[0]);
-			Arrays.sort(gameList, new Comparator<Game>() {
+			Collections.sort(games, new Comparator<Game>() {
 				@Override
 				public int compare(Game g1, Game g2) {
 					return g1.getSquare() - g2.getSquare();
 				}
 			});
 
-			bestGames = null;
-			bestSumSquares = 0;
-
 			// Compute bestGames via recursive call
-			combinations2(gameList, gamesPerRound, 0, new Game[gamesPerRound]);
+			CombResult combResult = combinationsTwo(games, gamesPerRound, new HashSet<Game>(), 0, new HashSet<String>(),
+					combis.compareTo(maxCombis) > 0 ? enoughGood : null);
+			if (combResult.bestGames == null) {
+				combResult = combinationsThree(games, gamesPerRound,
+						combis.compareTo(maxCombis) > 0 ? enoughGood : null);
+			}
+			logger.debug("Best is {}", combResult.bestGames);
 
-			System.out.println("Best is " + Arrays.toString(bestGames));
 			round.clear();
-			for (Game game : bestGames) {
+
+			if (combResult.bestGames == null) {
+				throw new SwissException("No valid combination of games found");
+			}
+			for (Game game : combResult.bestGames) {
 				round.add(new PersonScore(game.getName1()));
 				round.add(new PersonScore(game.getName2()));
 			}
+
 		}
 
 	}
 
-	static BigInteger binomial(final int N, final int K) {
+	static BigInteger cNR(final int N, final int K) {
 		BigInteger ret = BigInteger.ONE;
 		for (int k = 0; k < K; k++) {
 			ret = ret.multiply(BigInteger.valueOf(N - k)).divide(BigInteger.valueOf(k + 1));
@@ -262,69 +289,103 @@ public class BasicSwiss {
 	}
 
 	/**
-	 * Recursive function to set bestGames
-	 * @param arr Array of possible Games
-	 * @param len number of games left to identify
-	 * @param startPosition
-	 * @param result
-	 * @return
+	 * Recursive function to return best set of games
+	 * 
+	 * @param games         Array of possible Games
+	 * @param gamesPerRound Number of games to have a complete valid round
+	 * @param inResults     games in the chain so far
+	 * @param inSum         Count of sum of squares of games in the chain
+	 * @param inNames       set of player names already allocated in the chain
+	 * @param enoughGood    if not null the calculation should only consider
+	 *                      enoughGood valid combinations
+	 * @return CombResult
 	 */
-	boolean combinations2(Game[] arr, int len, int startPosition, Game[] result) {
-// TODO		System.out.println(len + " " + startPosition + " " +  result.length);
-		if (len == 0) {
-			Set<String> names = new HashSet<>();
-			boolean good = true;
-			for (Game game : result) {
-				if (!names.add(game.getName1()) || !names.add(game.getName2())) {
-					good = false;
-					break;
-				}
-			}
-			if (good) {
-				int sum = 0;
-				for (Game game : result) {
-					sum = sum + game.getSquare();
-				}
-				numGood++;
-				if (bestGames == null || sum < bestSumSquares) {
-					bestGames = result.clone();
-					bestSumSquares = sum;
-				}
-				if (combis.compareTo(maxCombis) > 0) {
-// TODO					System.out.println("Goods " + numGood + " " + enoughGood);
-					if (numGood > enoughGood) {
-						return false;
+	static CombResult combinationsTwo(List<Game> games, int gamesPerRound, Set<Game> inResults, long inSum,
+			Set<String> inNames, Integer enoughGood) {
+		logger.debug("Selecting from games:{}, inResults:{}, inNames:{}, inSum:{}", games, inResults, inNames, inSum);
+		long bestSumSquares = Long.MAX_VALUE;
+		Set<Game> bestGames = null;
+		Set<Game> badGames = new HashSet<Game>();
+		int numGood = 0;
+		boolean more = true;
+		int offset = 0;
+		for (Game game : games) {
+			offset++;
+			Set<String> names = new HashSet<>(inNames);
+			if (names.add(game.getName1()) && names.add(game.getName2())) {
+				Set<Game> results = new HashSet<Game>(inResults);
+				results.add(game);
+				long sum = inSum + game.getSquare();
+				if (results.size() == gamesPerRound) {
+					numGood++;
+					if (sum < bestSumSquares) {
+						bestSumSquares = sum;
+						bestGames = results;
+					}
+				} else {
+					List<Game> gamesToConsider = new ArrayList<>();
+					for (Game g : games.subList(offset, games.size())) {
+						if (!badGames.contains(g)) {
+							gamesToConsider.add(g);
+						}
+					}
+					CombResult combresult = combinationsTwo(gamesToConsider, gamesPerRound, results, sum, names,
+							enoughGood);
+					if (combresult.bestSumSquares < bestSumSquares) {
+						bestSumSquares = combresult.bestSumSquares;
+						bestGames = combresult.bestGames;
+					}
+					numGood += combresult.numGood;
+					if (enoughGood != null && numGood >= enoughGood) {
+						logger.debug("Enough results");
+						more = false;
+						break;
 					}
 				}
+			} else {
+				badGames.add(game);
+				logger.debug("Game rejected {}", game);
 			}
-			return true;
 		}
-		for (int i = startPosition; i <= arr.length - len; i++) {
-			result[result.length - len] = arr[i];
+		CombResult combresult = new CombResult(more, numGood, bestGames, bestSumSquares);
+		logger.debug("Returning {}", combresult);
+		return combresult;
+	}
+
+	static CombResult combinationsThree(List<Game> games, int gamesPerRound, Integer enoughGood) {
+		Iterator<int[]> iterator = CombinatoricsUtils.combinationsIterator(games.size(), gamesPerRound);
+		long bestSumSquares = Long.MAX_VALUE;
+		boolean more = true;
+		Set<Game> bestGames = null;
+		int numGood = 0;
+		while (iterator.hasNext()) {
 			int sum = 0;
-
-			Set<String> names = new HashSet<>();
-			boolean good = true;
-
-			for (int j = 0; j < result.length - len; j++) {
-				if (!names.add(result[j].getName1()) || !names.add(result[j].getName2())) {
-					good = false;
+			Set<String> players = new HashSet<String>();
+			int[] gs = iterator.next();
+			for (int g : gs) {
+				Game game = games.get(g);
+				if (!players.add(game.getName1()) || !players.add(game.getName2())) {
 					break;
 				}
-				sum += result[j].getSquare();
-				if (bestGames != null && sum >= bestSumSquares) {
-					good = false;
-					break;
-				}
+				sum += game.getSquare();
 			}
-
-			if (good) {
-				if (!combinations2(arr, len - 1, i + 1, result)) {
-					return false;
+			if (players.size() == gamesPerRound * 2) {
+				numGood++;
+				if (sum < bestSumSquares) {
+					bestSumSquares = sum;
+					bestGames = new HashSet<Game>();
+					for (int g : gs) {
+						bestGames.add(games.get(g));
+					}
+				}
+				if (enoughGood != null && numGood >= enoughGood) {
+					logger.debug("Enough results");
+					more = false;
+					break;
 				}
 			}
 		}
-		return true;
+		return new CombResult(more, numGood, bestGames, bestSumSquares);
 	}
 
 	public ArrayList<String> getRanking() {
