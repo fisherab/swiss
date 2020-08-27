@@ -43,7 +43,7 @@ public class Cmd {
 		}
 	}
 
-	public static void main(String[] args) throws SwissException {
+	public static void main(String[] args) {
 		int byeScore = getWithDefaults("byeScore", 26);
 		int maxCombis = getWithDefaults("maxCombis", 1000000000);
 		int enoughGood = getWithDefaults("enoughGood", 100);
@@ -68,7 +68,12 @@ public class Cmd {
 		}
 		System.out.println("Rounds KO:" + tournament.getKORounds() + ", Max:" + tournament.getMaxRounds()
 				+ ", Recommended:" + tournament.getRecRounds());
-		tournament.start();
+		try {
+			tournament.start();
+		} catch (SwissException e) {
+			System.out.println(e.getMessage());
+			System.exit(1);
+		}
 
 		int roundNum = 1;
 
@@ -110,7 +115,15 @@ public class Cmd {
 					finished = true;
 					finishChoiceMade = true;
 				} else if ("NEXT".equals(cmd)) {
-					tournament.prepareRound();
+					try {
+						tournament.prepareRound();
+					} catch (SwissException e) {
+						System.out.println(e.getMessage());
+						System.out.println("Tournament will finish");
+						finished = true;
+						finishChoiceMade = true;
+						continue;
+					}
 					roundNum++;
 					finishChoiceMade = true;
 				}
