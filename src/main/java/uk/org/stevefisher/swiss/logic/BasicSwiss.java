@@ -86,7 +86,7 @@ public class BasicSwiss {
 			throw new SwissException("The player name 'Bye' is reserved");
 		}
 		if (col != null) {
-			logger.info(name + " will get " + col);
+			System.out.println(name + " will get " + col);
 		}
 		players.put(name, new Player(name, col));
 	}

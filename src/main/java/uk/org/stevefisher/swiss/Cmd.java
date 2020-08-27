@@ -66,14 +66,15 @@ public class Cmd {
 				System.err.println(e.getMessage());
 			}
 		}
-		System.out.println("Rounds KO:" + tournament.getKORounds() + ", Max:" + tournament.getMaxRounds()
-				+ ", Recommended:" + tournament.getRecRounds());
+		// This may add an extra player "Bye" which affects the rounds calculations
 		try {
 			tournament.start();
 		} catch (SwissException e) {
 			System.out.println(e.getMessage());
 			System.exit(1);
 		}
+		System.out.println("Rounds KO:" + tournament.getKORounds() + ", Max:" + tournament.getMaxRounds()
+		+ ", Recommended:" + tournament.getRecRounds());
 
 		int roundNum = 1;
 
@@ -118,6 +119,12 @@ public class Cmd {
 			while (!finishChoiceMade) {
 				if (roundNum >= tournament.getRecRounds()) {
 					System.out.println("You have completed the recommended number of rounds.");
+				}
+				if (roundNum >= tournament.getMaxRounds()) {
+					System.out.println("You have completed the maximum number of rounds.");
+					finished = true;
+					finishChoiceMade = true;
+					continue;
 				}
 				String cmd = readLine("FINISH (tournament), NEXT (to start next round) ").toUpperCase().trim();
 				if ("FINISH".equals(cmd)) {
