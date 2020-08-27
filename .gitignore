@@ -4,4 +4,4 @@
 /.project
 /build/
 .gradle
-/z/
+gamelog*

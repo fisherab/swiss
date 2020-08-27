@@ -2,8 +2,17 @@ package uk.org.stevefisher.swiss.logic;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.math.BigInteger;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -107,6 +116,42 @@ public class TestBasicSwiss {
 				}
 			}
 		}
+	}
+
+	@Test
+	void testWriteLog() throws Exception {
+		String strDate = new SimpleDateFormat("yyyy-MM-dd").format(Calendar.getInstance().getTime());
+		String logname = "gamelog-" + strDate;
+		System.out.println(logname);
+		List<PersonScore> round = new ArrayList<PersonScore>();
+		PersonScore p = new PersonScore("Andrew Aardvark");
+		p.setScore(6);
+		round.add(p);
+		p = new PersonScore("Bill Banana");
+		p.setScore(23);
+		round.add(p);
+		p = new PersonScore("Cool Cucumber");
+		p.setScore(22);
+		round.add(p);
+		p = new PersonScore("Dangerous Dan");
+		p.setScore(2);
+		round.add(p);
+		BasicSwiss.writeLog(round);
+		BasicSwiss.writeLog(round);
+		try (BufferedReader f = new BufferedReader(new FileReader(logname))) {
+			String line;
+			int i = 0;
+			while ((line = f.readLine()) != null) {
+				if (i % 2 == 0) {
+					assertEquals("Bill Banana,beat,Andrew Aardvark,23,6", line);
+				} else {
+					assertEquals("Cool Cucumber,beat,Dangerous Dan,22,2", line);
+				}
+				i++;
+			}
+			assertEquals(4, i);
+		}
+		Files.delete(Paths.get(logname));
 	}
 
 	@Test

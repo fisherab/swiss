@@ -1,9 +1,15 @@
 package uk.org.stevefisher.swiss.logic;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.math.BigInteger;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -704,6 +710,27 @@ public class BasicSwiss {
 			System.out.println(bye + " gets a bye");
 		}
 
+	}
+
+	public static void writeLog(List<PersonScore> round) throws SwissException {
+		String strDate = new SimpleDateFormat("yyyy-MM-dd").format(Calendar.getInstance().getTime());
+		String logname = "gamelog-" + strDate;
+		try (FileWriter f = new FileWriter(logname, true)) {
+			int ngames = round.size() / 2;
+			for (int i = 0; i < ngames; i++) {
+				PersonScore p1 = round.get(2 * i);
+				PersonScore p2 = round.get(2 * i + 1);
+				if (p1.getScore() > p2.getScore()) {
+					f.write(p1.getName() + ",beat," + p2.getName() + "," + p1.getScore() + "," + p2.getScore() + "\n");
+				} else if (p1.getScore() < p2.getScore()) {
+					f.write(p2.getName() + ",beat," + p1.getName() + "," + p2.getScore() + "," + p1.getScore() + "\n");
+				} else {
+					f.write(p1.getName() + ",draws with," + p2.getName() + "," + p1.getScore() + "," + p2.getScore() + "\n");
+				}
+			}
+		} catch (IOException e) {
+			throw new SwissException(e.getClass() + " " + e.getMessage());
+		}
 	}
 
 }

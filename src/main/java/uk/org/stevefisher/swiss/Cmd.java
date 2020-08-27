@@ -101,7 +101,13 @@ public class Cmd {
 					}
 				}
 			}
-
+			
+			try {
+				BasicSwiss.writeLog(round);
+			} catch (SwissException e1) {
+				System.out.println("Failed to write log");
+			}
+			
 			tournament.computeRanking();
 			System.out.print("Ranking after round " + roundNum + " ");
 			for (String name : tournament.getRanking()) {
