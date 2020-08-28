@@ -732,4 +732,8 @@ public class BasicSwiss {
 		}
 	}
 
+	public int getNumLawns() {
+		return numLawns;
+	}
+
 }

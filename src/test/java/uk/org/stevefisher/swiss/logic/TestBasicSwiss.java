@@ -108,7 +108,8 @@ public class TestBasicSwiss {
 		sw.computeRanking();
 		Map<String, Integer> fr = sw.getFinalRanking();
 
-		System.out.format("%n                        W   H   Lawns     P+  S%n");
+		System.out.format("%2s %-18.18s %4.4s : %5.5s %-12.12s %9.9s %6.6s%n", " #", "name", "wins", "hoops", "lawns", "primaryXS",
+				"starts");
 
 		for (int i = 1; i <= sw.getPlayers().size(); i++) {
 			for (Entry<String, Integer> entry : fr.entrySet()) {
@@ -120,13 +121,12 @@ public class TestBasicSwiss {
 					int hoops = p.getHoops();
 					int prim = p.getPrimaryExcess();
 					List<Integer> lawns = new ArrayList<>();
-					for (int j = 0; j < 3; j++) {
+					for (int j = 0; j < sw.getNumLawns(); j++) {
 						lawns.add(p.getLawnCount(j));
 					}
 					int starts = p.getStartCount();
 
-					System.out.format("%2d %-20s %1d : %2d %-10s %2d %2d%n", pos, name, wins, hoops, lawns.toString(),
-							prim, starts);
+					System.out.format("%2d %-18.18s %4d : %5d %-12.12s %9d %6d%n", pos, name, wins, hoops, lawns.toString(), prim, starts);
 				}
 			}
 		}
