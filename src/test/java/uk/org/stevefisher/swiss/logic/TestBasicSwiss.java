@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -29,6 +30,22 @@ import uk.org.stevefisher.swiss.logic.BasicSwiss.CombResult;
 public class TestBasicSwiss {
 
 	private static final Logger logger = LogManager.getLogger(TestBasicSwiss.class);
+
+	@Test
+	public void testFormat() {
+		System.out.format("%2s %-18.18s %4.4s : %5.5s %-12.12s %9.9s %6.6s%n", " #", "name", "wins", "hoops", "lawns", "primaryXS",
+				"starts");
+		String name = "ABCDEFGHIJKLMONPQRSTUVWXYZ";
+		int pos = 1;
+		int wins = 20;
+		int hoops = 999;
+		int prim = 5;
+		List<Integer> lawns = new ArrayList<>();
+		lawns.add(6);
+		lawns.add(7);
+		int starts = 20;
+		System.out.format("%2d %-18.18s %4d : %5d %-12.12s %9d %6d%n", pos, name, wins, hoops, lawns.toString(), prim, starts);
+	}
 
 	@RepeatedTest(1000)
 	public void testCreate() throws Exception {
@@ -120,6 +137,11 @@ public class TestBasicSwiss {
 		String strDate = new SimpleDateFormat("yyyy-MM-dd").format(Calendar.getInstance().getTime());
 		String logname = "gamelog-" + strDate;
 		System.out.println(logname);
+		try {
+			Files.delete(Paths.get(logname));
+		} catch (IOException e) {
+			// NOP
+		}
 		List<PersonScore> round = new ArrayList<PersonScore>();
 		PersonScore p = new PersonScore("Andrew Aardvark");
 		p.setScore(6);

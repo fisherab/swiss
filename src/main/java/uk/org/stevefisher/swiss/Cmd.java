@@ -74,7 +74,7 @@ public class Cmd {
 			System.exit(1);
 		}
 		System.out.println("Rounds KO:" + tournament.getKORounds() + ", Max:" + tournament.getMaxRounds()
-		+ ", Recommended:" + tournament.getRecRounds());
+				+ ", Recommended:" + tournament.getRecRounds());
 
 		int roundNum = 1;
 
@@ -102,13 +102,13 @@ public class Cmd {
 					}
 				}
 			}
-			
+
 			try {
 				BasicSwiss.writeLog(round);
 			} catch (SwissException e1) {
 				System.out.println("Failed to write log");
 			}
-			
+
 			tournament.computeRanking();
 			System.out.print("Ranking after round " + roundNum + " ");
 			for (String name : tournament.getRanking()) {
@@ -149,6 +149,8 @@ public class Cmd {
 		Map<String, Integer> fr = tournament.getFinalRanking();
 		System.out.println();
 
+		System.out.format("%2s %-18.18s %4.4s : %5.5s %-12.12s %9.9s %6.6s%n", " #", "name", "wins", "hoops", "lawns",
+				"primaryXS", "starts");
 		for (int i = 1; i <= tournament.getPlayers().size(); i++) {
 			for (Entry<String, Integer> entry : fr.entrySet()) {
 				if (entry.getValue() == i) {
@@ -164,8 +166,8 @@ public class Cmd {
 					}
 					int starts = p.getStartCount();
 
-					System.out.format("%2d %s %d : %d %s %d %d%n", pos, name, wins, hoops, lawns.toString(), prim,
-							starts);
+					System.out.format("%2d %-18.18s %4d : %5d %-12.12s %9d %6d%n", pos, name, wins, hoops,
+							lawns.toString(), prim, starts);
 				}
 			}
 		}
