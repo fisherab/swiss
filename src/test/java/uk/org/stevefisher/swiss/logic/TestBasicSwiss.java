@@ -4,13 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
-import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -33,8 +30,8 @@ public class TestBasicSwiss {
 
 	@Test
 	public void testFormat() {
-		System.out.format("%2s %-18.18s %4.4s : %5.5s %-12.12s %9.9s %6.6s%n", " #", "name", "wins", "hoops", "lawns", "primaryXS",
-				"starts");
+		System.out.format("%2s %-18.18s %4.4s : %5.5s %-12.12s %9.9s %6.6s%n", " #", "name", "wins", "hoops", "lawns",
+				"primaryXS", "starts");
 		String name = "ABCDEFGHIJKLMONPQRSTUVWXYZ";
 		int pos = 1;
 		int wins = 20;
@@ -44,7 +41,8 @@ public class TestBasicSwiss {
 		lawns.add(6);
 		lawns.add(7);
 		int starts = 20;
-		System.out.format("%2d %-18.18s %4d : %5d %-12.12s %9d %6d%n", pos, name, wins, hoops, lawns.toString(), prim, starts);
+		System.out.format("%2d %-18.18s %4d : %5d %-12.12s %9d %6d%n", pos, name, wins, hoops, lawns.toString(), prim,
+				starts);
 	}
 
 	@RepeatedTest(1000)
@@ -108,8 +106,8 @@ public class TestBasicSwiss {
 		sw.computeRanking();
 		Map<String, Integer> fr = sw.getFinalRanking();
 
-		System.out.format("%2s %-18.18s %4.4s : %5.5s %-12.12s %9.9s %6.6s%n", " #", "name", "wins", "hoops", "lawns", "primaryXS",
-				"starts");
+		System.out.format("%2s %-18.18s %4.4s : %5.5s %-12.12s %9.9s %6.6s%n", " #", "name", "wins", "hoops", "lawns",
+				"primaryXS", "starts");
 
 		for (int i = 1; i <= sw.getPlayers().size(); i++) {
 			for (Entry<String, Integer> entry : fr.entrySet()) {
@@ -126,7 +124,8 @@ public class TestBasicSwiss {
 					}
 					int starts = p.getStartCount();
 
-					System.out.format("%2d %-18.18s %4d : %5d %-12.12s %9d %6d%n", pos, name, wins, hoops, lawns.toString(), prim, starts);
+					System.out.format("%2d %-18.18s %4d : %5d %-12.12s %9d %6d%n", pos, name, wins, hoops,
+							lawns.toString(), prim, starts);
 				}
 			}
 		}
@@ -134,14 +133,12 @@ public class TestBasicSwiss {
 
 	@Test
 	void testWriteLog() throws Exception {
-		String strDate = new SimpleDateFormat("yyyy-MM-dd").format(Calendar.getInstance().getTime());
-		String logname = "gamelog-" + strDate;
-		System.out.println(logname);
-		try {
-			Files.delete(Paths.get(logname));
-		} catch (IOException e) {
-			// NOP
-		}
+		BasicSwiss sw = new BasicSwiss(26, 1000000000, 100, 4);
+		sw.addPlayer("Andrew Aardvark", Colours.PRIMARY);
+		sw.addPlayer("Bill Banana", Colours.SECONDARY);
+		sw.addPlayer("Cool Cucumber", null);
+		sw.addPlayer("Dangerous Dan");
+		String logname = "journal.txt";
 		List<PersonScore> round = new ArrayList<PersonScore>();
 		PersonScore p = new PersonScore("Andrew Aardvark");
 		p.setScore(6);
@@ -155,22 +152,26 @@ public class TestBasicSwiss {
 		p = new PersonScore("Dangerous Dan");
 		p.setScore(2);
 		round.add(p);
-		BasicSwiss.writeLog(round);
-		BasicSwiss.writeLog(round);
+		sw.writeLog(round, true);
+		sw.writeLog(round, false);
 		try (BufferedReader f = new BufferedReader(new FileReader(logname))) {
 			String line;
 			int i = 0;
 			while ((line = f.readLine()) != null) {
-				if (i % 2 == 0) {
-					assertEquals("Bill Banana,beat,Andrew Aardvark,23,6", line);
+				if (i == 0) {
+					assertEquals("Andrew Aardvark -P,Bill Banana -S,Cool Cucumber,Dangerous Dan", line);
 				} else {
-					assertEquals("Cool Cucumber,beat,Dangerous Dan,22,2", line);
+					if (i % 2 == 1) {
+						assertEquals("Bill Banana,beat,Andrew Aardvark,23,6", line);
+					} else {
+						assertEquals("Cool Cucumber,beat,Dangerous Dan,22,2", line);
+					}
 				}
 				i++;
 			}
-			assertEquals(4, i);
+			assertEquals(5, i);
 		}
-		Files.delete(Paths.get(logname));
+		Files.deleteIfExists(Paths.get(logname));
 	}
 
 	@Test
