@@ -1,7 +1,3 @@
-/bin/
-/.settings/
-/.classpath
-/.project
-/build/
-.gradle
 gamelog*
+**/__pycache__
+*.pyc
