@@ -1,6 +1,9 @@
 from math import comb
 from enum import Enum
+from itertools import combinations
 import random
+import logging
+logger = logging.getLogger(__name__)
 
 class Colours(Enum):
     PRIMARY = 1
@@ -16,7 +19,7 @@ class Game(object):
         self.start = False
 
     def __str__(self):
-        return "Game " + str(self.name1) + " vs " + str(self.name2) + ("" if self.square is None else " : " + str(self.square))
+        return "Game " + str(self.name1) + " vs " + str(self.name2) + ("" if self.square is None else " sq:" + str(self.square))
 
 class Player(object):
     
@@ -53,7 +56,10 @@ class CombResult:
         self.bestSumSquares = bestSumSquares
 
      def __str__(self):
-        return "More:" + str(self.more) + " numGood:" + str(self.numGood) + " bestGames:" + str(self.bestGames) + " bestSumSquares:" + str(self.bestSumSquares)
+        ret = "More:" + str(self.more) + " numGood:" + str(self.numGood) + " bestGames:"
+        if self.bestGames != None:
+            for game in self.bestGames: ret += " " + str(game)
+        return ret + " bestSumSquares:" + str(self.bestSumSquares)
 
 class Tournament(object):
 
@@ -178,7 +184,6 @@ class Tournament(object):
         lowNames.reverse()
         for name in lowNames: round.append([name, 0]);
 
-
         if p2 == None:
             print("CCCCCCCCCCCCCCCCCCCC")
             # There were clashes so compute set of all possible (i.e. non-played) games.
@@ -196,19 +201,18 @@ class Tournament(object):
             # when the result is good enough. 
             gamesPerRound = len(self.players) // 2;
             combis = comb(len(games), gamesPerRound);
-            print("There are " + str(len(games)) + " games with " + str(combis) + " combinations."
+            logger.debug("There are " + str(len(games)) + " games with " + str(combis) + " combinations."
                     + (" Truncate" if combis>self.maxCombis else ""));
 
-            # Sort the games by fairness i.e. how close in ranking
-            games.sort(key=lambda game: game.square)
-            for g in games: print(g)
-           
-            # Compute bestGames via recursive call
-            combResult = Tournament.combinationsTwo(games, gamesPerRound, set(), 0, set(), enoughGood if combis > self.maxCombis else None)
+##            # Sort the games by fairness i.e. how close in ranking
+##            games.sort(key=lambda game: game.square)
+##           
+##            # Compute bestGames via recursive call
+##            #combResult = Tournament.combinationsTwo(games, gamesPerRound, set(), 0, set(), enoughGood if combis > self.maxCombis else None)
+##            combResult = CombResult(False, 0, None, 0);
 
-            # If this fails then ...
-            if (combResult.bestGames == None): combResult = combinationsThree(games, gamesPerRound, enoughGood if combis > self.maxCombis else None)
-            print("Best is " + str(combResult.bestGames))
+            combResult = Tournament.combinationsThree(games, gamesPerRound, enoughGood if combis > self.maxCombis else None)
+            logger.debug("Best is " + str(combResult.bestGames))
 
             round.clear();
 
@@ -237,7 +241,6 @@ class Tournament(object):
             if p1[0] =="Bye": bye = p2[0]
             elif p2[0] =="Bye": bye = p1[0]
             else: games.append(Game(p1[0], p2[0]))
-     
             
         for game in games:
             p1 = self.players[game.name1]
@@ -332,12 +335,12 @@ class Tournament(object):
                 self.players[first.name2].startCount += 1
             
         for game in games:
-            print(str(game) + " "
+            logger.debug(str(game) + " "
                     + game.colours.name + " on lawn " + str(game.lawn + 1) + " go "
                     + ("first" if game.start else "second"))
         
         if bye != None:
-            print(bye + " gets a bye")
+            logger.debug(bye + " gets a bye")
         
 
     
@@ -350,46 +353,44 @@ class Tournament(object):
 ##		STARTED, SETTING_UP
 ##	};
 ##
-##	private static final Logger logger = LogManager.getLogger(BasicSwiss.class);;
+##	private static final logging logging = LogManager.getlogging(BasicSwiss.class);;
 ##
-##	
-##	static CombResult combinationsThree(List<Game> games, int gamesPerRound, Integer enoughGood) {
-##		Iterator<int[]> iterator = CombinatoricsUtils.combinationsIterator(games.size(), gamesPerRound);
-##		long bestSumSquares = Long.MAX_VALUE;
-##		boolean more = true;
-##		Set<Game> bestGames = null;
-##		int numGood = 0;
-##		while (iterator.hasNext()) {
-##			int sum = 0;
-##			Set<String> players = new HashSet<String>();
-##			int[] gs = iterator.next();
-##			for (int g : gs) {
-##				Game game = games.get(g);
-##				if (!players.add(game.getName1()) || !players.add(game.getName2())) {
-##					break;
-##				}
-##				sum += game.getSquare();
-##			}
-##			if (players.size() == gamesPerRound * 2) {
-##				numGood++;
-##				if (sum < bestSumSquares) {
-##					bestSumSquares = sum;
-##					bestGames = new HashSet<Game>();
-##					for (int g : gs) {
-##						bestGames.add(games.get(g));
-##					}
-##				}
-##				if (enoughGood != null && numGood >= enoughGood) {
-##					logger.debug("Enough results");
-##					more = false;
-##					break;
-##				}
-##			}
-##		}
-##		return new CombResult(more, numGood, bestGames, bestSumSquares);
-##	}
 ##
-
+    @staticmethod
+    def combinationsThree(games, gamesPerRound, enoughGood):
+        """
+        Return best set of games
+        
+        :param games:         Array of possible Games
+        :param gamesPerRound: Number of games to have a complete valid round
+        :param enoughGood:    if not None the calculation should only consider enoughGood valid combinations
+        :return: a CombResult
+        """        
+        logger.info("Three")
+        iterator = combinations(games, gamesPerRound)
+        bestSumSquares = None
+        bestGames = None
+        numGood = 0
+        for gameSet in iterator:
+            sumSq = 0;
+            players = set()
+            for game in gameSet:
+                if game.name1 in players or game.name2 in players: break
+                players.add(game.name1)
+                players.add(game.name2)
+                sumSq += game.square
+            
+            if len(players) == gamesPerRound * 2:
+                numGood += 1
+                if bestSumSquares == None or sumSq < bestSumSquares:
+                    bestSumSquares = sumSq;
+                    bestGames = gameSet
+                    
+                if enoughGood != None and numGood >= enoughGood:
+                    logger.debug("Enough results");
+                    break
+                
+        return CombResult(None, numGood, bestGames, bestSumSquares)
 
     @staticmethod
     def combinationsTwo(games, gamesPerRound, inResults, inSum, inNames, enoughGood):
@@ -404,7 +405,7 @@ class Tournament(object):
         :param enoughGood:    if not null the calculation should only consider enoughGood valid combinations
         :return: a CombResult
         """        
-        print("Selecting from", len(games), "games inResults", inResults, "inNames", inNames, "inSum", inSum)
+        logger.debug("Selecting from", len(games), "games inResults", inResults, "inNames", inNames, "inSum", inSum)
         bestSumSquares = None
         bestGames = None
         badGames = set()
@@ -437,15 +438,15 @@ class Tournament(object):
                     
                     numGood += combresult.numGood;
                     if enoughGood != None and numGood >= enoughGood:
-                        print("Enough results")
-                        more = false
+                        logger.debug("Enough results")
+                        more = False
                         break
             else:
                 badGames.add(game);
-                print("Game rejected {}", game);
+                logger.debug("Game rejected {}", game);
             
         combresult = CombResult(more, numGood, bestGames, bestSumSquares);
-        print("Returning combresult", combresult);
+        logger.debug("Returning combresult", combresult);
         return combresult;
     
 
