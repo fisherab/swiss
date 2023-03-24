@@ -35,7 +35,7 @@ class Player(object):
         self.startCount = 0
 
     def __str__(self):
-        return "Player " + self.name + str(self.games)
+        return "Player " + self.name + " " + str(self.games)
 
     def getPrimaryExcess(self):
         return self.primarys - self.secondarys;
@@ -49,17 +49,17 @@ class Player(object):
 
 class CombResult:
 
-     def __init__(self, more,  numGood,  bestGames,  bestSumSquares):
-        self.more = more
+     def __init__(self, numGood,  bestGames,  bestSumSquares):
         self.numGood = numGood
         self.bestGames = bestGames
         self.bestSumSquares = bestSumSquares
 
      def __str__(self):
-        ret = "More:" + str(self.more) + " numGood:" + str(self.numGood) + " bestGames:"
+        ret = "numGood:" + str(self.numGood) + " bestGames:"
         if self.bestGames != None:
             for game in self.bestGames: ret += " " + str(game)
-        return ret + " bestSumSquares:" + str(self.bestSumSquares)
+        if self.bestSumSquares != None: ret += " bestSumSquares:" + str(self.bestSumSquares)
+        return ret
 
 class Tournament(object):
 
@@ -74,15 +74,28 @@ class Tournament(object):
     def addPlayer(self, name, col=None, allowBye=False):
         if name in self.players: raise Exception("Player " + name + " already present")
         if name == "Bye" and not allowBye: raise Exception("The player name 'Bye' is reserved")
-        if col != None: print(name + " will get " + col.name)
+        if col != None: logger.debug(name + " will get " + col.name)
         self.players[name] = Player(name, col)
 
     def start(self):
-        ### Create first round (numbered 0) and add it to rounds list. ###
+        """
+        Create first round (numbered 0) and add it to rounds list.
+        """
         if len(self.players) % 2 == 1: self.players["Bye"] = Player("Bye", None)
         round = []
         for name in self.players: round.append([name,0])
         random.shuffle(round)
+        self.rounds.append(round)
+
+    def startWithNames(self, names):
+        """
+        Create first round (numbered 0) using names ordered as specified for
+        recovering from journal
+     
+        :param names List of names to set for the first round
+        """
+        round = []
+        for name in names: round.append([name, 0])
         self.rounds.append(round)
 
     def getKORounds(self):
@@ -185,7 +198,6 @@ class Tournament(object):
         for name in lowNames: round.append([name, 0]);
 
         if p2 == None:
-            print("CCCCCCCCCCCCCCCCCCCC")
             # There were clashes so compute set of all possible (i.e. non-played) games.
             games = []
             for name1 in self.players:
@@ -201,25 +213,26 @@ class Tournament(object):
             # when the result is good enough. 
             gamesPerRound = len(self.players) // 2;
             combis = comb(len(games), gamesPerRound);
-            logger.debug("There are " + str(len(games)) + " games with " + str(combis) + " combinations."
-                    + (" Truncate" if combis>self.maxCombis else ""));
+            logger.info("There are " + str(len(games)) + " games with " + str(combis) + " combinations."
+                    + (" Truncate" if combis>self.maxCombis else ""))
+            for game in games: logger.debug(game)
 
-##            # Sort the games by fairness i.e. how close in ranking
-##            games.sort(key=lambda game: game.square)
-##           
-##            # Compute bestGames via recursive call
-##            #combResult = Tournament.combinationsTwo(games, gamesPerRound, set(), 0, set(), enoughGood if combis > self.maxCombis else None)
-##            combResult = CombResult(False, 0, None, 0);
+            # Sort the games by fairness i.e. how close in ranking
+            games.sort(key=lambda game: game.square)
+           
+            # Compute bestGames via recursive call
+            combResult = Tournament.bestCombinations(games, gamesPerRound, set(), 0, set(), enoughGood if combis > self.maxCombis else None)
 
-            combResult = Tournament.combinationsThree(games, gamesPerRound, enoughGood if combis > self.maxCombis else None)
-            logger.debug("Best is " + str(combResult.bestGames))
-
-            round.clear();
-
-            if combResult.bestGames == None: raise Exception("No valid combination of games found")
-            for game in combResult.bestGames:
-                round.append([game.name1, 0])
-                round.append([game.name2, 0])
+            round.clear()
+            if combResult.bestGames == None:
+                logger.info("No valid combination of games found")
+            else:
+                res = "Best is"
+                for g in combResult.bestGames: res += " " + str(g)
+                logger.info(res)
+                for game in combResult.bestGames:
+                    round.append([game.name1, 0])
+                    round.append([game.name2, 0])
 
     def setByeScores(self):
         round = self.rounds[len(self.rounds) - 1]
@@ -342,58 +355,8 @@ class Tournament(object):
         if bye != None:
             logger.debug(bye + " gets a bye")
         
-
-    
-
-
-
-
-##
-##	enum Status {
-##		STARTED, SETTING_UP
-##	};
-##
-##	private static final logging logging = LogManager.getlogging(BasicSwiss.class);;
-##
-##
     @staticmethod
-    def combinationsThree(games, gamesPerRound, enoughGood):
-        """
-        Return best set of games
-        
-        :param games:         Array of possible Games
-        :param gamesPerRound: Number of games to have a complete valid round
-        :param enoughGood:    if not None the calculation should only consider enoughGood valid combinations
-        :return: a CombResult
-        """        
-        logger.info("Three")
-        iterator = combinations(games, gamesPerRound)
-        bestSumSquares = None
-        bestGames = None
-        numGood = 0
-        for gameSet in iterator:
-            sumSq = 0;
-            players = set()
-            for game in gameSet:
-                if game.name1 in players or game.name2 in players: break
-                players.add(game.name1)
-                players.add(game.name2)
-                sumSq += game.square
-            
-            if len(players) == gamesPerRound * 2:
-                numGood += 1
-                if bestSumSquares == None or sumSq < bestSumSquares:
-                    bestSumSquares = sumSq;
-                    bestGames = gameSet
-                    
-                if enoughGood != None and numGood >= enoughGood:
-                    logger.debug("Enough results");
-                    break
-                
-        return CombResult(None, numGood, bestGames, bestSumSquares)
-
-    @staticmethod
-    def combinationsTwo(games, gamesPerRound, inResults, inSum, inNames, enoughGood):
+    def bestCombinations(games, gamesPerRound, inResults, inSum, inNames, enoughGood):
         """
         Recursive function to return best set of games
         
@@ -404,13 +367,12 @@ class Tournament(object):
         :param inNames:       set of player names already allocated in the chain
         :param enoughGood:    if not null the calculation should only consider enoughGood valid combinations
         :return: a CombResult
-        """        
-        logger.debug("Selecting from", len(games), "games inResults", inResults, "inNames", inNames, "inSum", inSum)
+        """
+        logger.debug("Selecting from " + str(len(games)) + " done " + str(len(inResults)) + " inNames " + str(inNames) + " inSum " + str(inSum))
         bestSumSquares = None
         bestGames = None
         badGames = set()
         numGood = 0
-        more = True
         offset = 0
         for game in games:
             offset += 1
@@ -431,7 +393,7 @@ class Tournament(object):
                     for g in games[offset:]:
                         if g not in badGames: gamesToConsider.append(g);
                         
-                    combresult = Tournament.combinationsTwo(gamesToConsider, gamesPerRound, results, sumSq, names, enoughGood)
+                    combresult = Tournament.bestCombinations(gamesToConsider, gamesPerRound, results, sumSq, names, enoughGood)
                     if combresult.bestSumSquares != None and (bestSumSquares == None or combresult.bestSumSquares < bestSumSquares):
                         bestSumSquares = combresult.bestSumSquares
                         bestGames = combresult.bestGames
@@ -439,217 +401,139 @@ class Tournament(object):
                     numGood += combresult.numGood;
                     if enoughGood != None and numGood >= enoughGood:
                         logger.debug("Enough results")
-                        more = False
                         break
             else:
                 badGames.add(game);
-                logger.debug("Game rejected {}", game);
+                logger.debug("Game rejected " + str(game))
             
-        combresult = CombResult(more, numGood, bestGames, bestSumSquares);
-        logger.debug("Returning combresult", combresult);
+        combresult = CombResult(numGood, bestGames, bestSumSquares)
+        logger.debug("Returning combresult" + str(combresult))
         return combresult;
     
+    def getFinalRanking(self):
+        r = {}
+        for name, player in self.players.items():
+            if name != "Bye":
+                numGames = player.games
+                if numGames not in r: r[numGames] = set()
+                r[numGames].add(player)
+    
+        result = {}
+        npos = 1
+        for key in reversed(sorted(r.keys())):     
+            players = list(r[key])
 
+            while len(players) > 0:
+                if len(players) == 1:
+                    result[players[0].name] = npos
+                    npos += 1
+                    players.clear()
+                else:
+                    logger.info("Need winner from " + str([p.name for p in players]));
+                    best = self.getBest(players)
+                    if best != None:
+                        result[best] = npos
+                        npos += 1
+                        for p in players:
+                            if p.name == best:
+                                bestPlayer = p
+                                break
+                        players.remove(bestPlayer)
+                    else: # best was None
+                        for p in players: result[p.name] = npos
+                        npos += len(players)
+                        players.clear()
+        return result;
 
-##
-##
-##	/* Set will always have at least two members */
-##	private String getBest(List<Player> set) {
-##		Map<String, Integer> names = new HashMap<>();
-##		for (Player p : set) {
-##			names.put(p.getName(), 0);
-##		}
-##
-##		int wins = 0;
-##		for (List<PersonScore> round : rounds) {
-##			int ngames = round.size() / 2;
-##			for (int i = 0; i < ngames; i++) {
-##				PersonScore p1r = round.get(2 * i);
-##				PersonScore p2r = round.get(2 * i + 1);
-##				if (names.containsKey(p1r.getName()) && names.containsKey(p2r.getName())) {
-##					if (p1r.getScore() > p2r.getScore()) {
-##						names.put(p1r.getName(), names.get(p1r.getName()) + 1);
-##					} else {
-##						names.put(p2r.getName(), names.get(p2r.getName()) + 1);
-##					}
-##					wins++;
-##				}
-##			}
-##		}
-##
-##		if (set.size() == 2) {
-##			String n1 = set.get(0).getName();
-##			String n2 = set.get(1).getName();
-##			if (wins == 1) {
-##				if (names.get(n1) > names.get(n2)) {
-##					System.out.println(", " + n1 + " beat " + n2 + " in a round");
-##					return n1;
-##				} else {
-##					System.out.println(", " + n2 + " beat " + n1 + " in a round");
-##					return n2;
-##				}
-##			} else {
-##				return mostHooper(set);
-##			}
-##		} else {// Three or more in tie
-##			System.out.print(", games won in tie " + names);
-##			if (wins == set.size() * (set.size() - 1) / 2) {
-##				System.out.print(", all played");
-##				int max = 0;
-##				for (Entry<String, Integer> name : names.entrySet()) {
-##					if (name.getValue() > max) {
-##						max = name.getValue();
-##					}
-##				}
-##				String best = null;
-##				for (Entry<String, Integer> name : names.entrySet()) {
-##					if (name.getValue() == max) {
-##						if (best == null) {
-##							best = name.getKey();
-##						} else {
-##							return mostHooper(set);
-##						}
-##					}
-##				}
-##				System.out.println(", " + best + " beat others in tie ");
-##				return best;
-##			} else {
-##				System.out.print(", not all played");
-##				int needed = set.size() - 1;
-##				String best = null;
-##				for (Entry<String, Integer> name : names.entrySet()) {
-##					if (name.getValue() == needed) {
-##						if (best == null) {
-##							best = name.getKey();
-##						} else {
-##							return mostHooper(set);
-##						}
-##					}
-##				}
-##				if (best != null) {
-##					System.out.println(", " + best + " beat others in tie ");
-##					return best;
-##				} else {
-##					return mostHooper(set);
-##				}
-##			}
-##		}
-##
-##	}
-##
-##	public Map<String, Integer> getFinalRanking() {
-##		Map<Integer, Set<Player>> r = new HashMap<>();
-##
-##		for (Player p : players.values()) {
-##			if (!p.getName().equals("Bye")) {
-##				int n = p.getGames();
-##				Set<Player> set = r.get(n);
-##				if (set == null) {
-##					set = new HashSet<>();
-##					r.put(n, set);
-##				}
-##				set.add(p);
-##			}
-##		}
-##		List<Integer> keys = new ArrayList<>(r.keySet());
-##		Collections.sort(keys);
-##		Collections.reverse(keys);
-##		Map<String, Integer> result = new HashMap<>();
-##		int npos = 1;
-##		for (Integer key : keys) {
-##			// Set of players with same number of wins
-##			List<Player> set = new ArrayList<>(r.get(key));
-##			while (set.size() > 0) {
-##				if (set.size() == 1) {
-##					result.put(set.get(0).getName(), npos++);
-##					set.clear();
-##				} else {
-##					System.out.print("Need winner from " + set);
-##					String best = getBest(set);
-##					if (best != null) {
-##						Iterator<Player> iter = set.iterator();
-##						while (iter.hasNext()) {
-##							if (iter.next().getName().equals(best)) {
-##								result.put(best, npos++);
-##								iter.remove();
-##								break;
-##							}
-##						}
-##					} else {
-##						for (Player p : set) {
-##							result.put(p.getName(), npos);
-##						}
-##						npos += set.size();
-##						set.clear();
-##					}
-##				}
-##			}
-##		}
-##		return result;
-##	}
-##
+    def getBest(self, players):
+        """Find the best of two or more players"""
+        names = {}
+        for p in players: names[p.name] = 0
+   
+        wins = 0
+        for round in self.rounds:
+            ngames = len(round) // 2
+            for i in range(ngames):
+                p1r = round[2 * i]
+                p2r = round[2 * i + 1]
+                if p1r[0] in names and p2r[0] in names:
+                    if p1r[1] > p2r[1]: names[p1r[0]] +=1
+                    else: names[p2r[0]] +=1
+                    wins += 1
+  
+        if len(players) == 2:
+            n1 = list(players)[0].name
+            n2 = list(players)[1].name
+       
+            if wins == 1: 
+                if names[n1] > names[n2]:
+                    logger.info(n1 + " beat " + n2 + " in a round")
+                    return n1
+                else:
+                    logger.info(n2 + " beat " + n1 + " in a round")
+                    return n2
+            else: return Tournament.mostHooper(players);
 
-##
-##	public int getNumLawns() {
-##		return numLawns;
-##	}
-##
-##	public Map<String, Player> getPlayers() {
-##		return players;
-##	}
-##
-##
-##
-##
-##	public List<PersonScore> getRound(int i) {
-##		return rounds.get(i);
-##	}
-##
+        else: # Three or more in tie
+            print(", games won in tie " + names)
+            if wins == len(players) * (len(players) - 1) // 2:
+                print(", all played")
+                max = 0
+##                for (Entry<String, Integer> name : names.entrySet()) {
+##                    if (name.getValue() > max) {
+##                        max = name.getValue();
+##                    }
+##                }
+##                String best = null;
+##                for (Entry<String, Integer> name : names.entrySet()) {
+##                    if (name.getValue() == max) {
+##                        if (best == null) {
+##                            best = name.getKey();
+##                        } else {
+##                            return mostHooper(set);
+##                        }
+##                    }
+##                }
+                print(", " + best + " beat others in tie ")
+                return best
+            else: 
+                print(", not all played")
+##                int needed = set.size() - 1;
+##                String best = null;
+##                for (Entry<String, Integer> name : names.entrySet()) {
+##                    if (name.getValue() == needed) {
+##                        if (best == null) {
+##                            best = name.getKey();
+##                        } else {
+##                            return mostHooper(set);
+##                        }
+##                    }
+##                }
+##                if (best != null) {
+##                    System.out.println(", " + best + " beat others in tie ");
+##                    return best;
+##                } else {
+##                    return mostHooper(set);
+##                }
+ 
 
-##
-##	private String mostHooper(List<Player> set) {
-##		int maxHoops = 0;
-##		for (Player p : set) {
-##			int hoops = p.getHoops();
-##			if (hoops > maxHoops) {
-##				maxHoops = hoops;
-##			}
-##		}
-##		String best = null;
-##		for (Player p : set) {
-##			if (p.getHoops() == maxHoops) {
-##				if (best == null) {
-##					best = p.getName();
-##				} else {
-##					System.out.println(", draw");
-##					return null;
-##				}
-##			}
-##		}
-##		System.out.println(", " + best + " got most hoops");
-##		return best;
-##	}
-##
+    @staticmethod
+    def mostHooper(players):
+        maxHoops = 0;
+        for p in players:
+            hoops = p.hoops
+            if hoops > maxHoops: maxHoops = hoops
+        best = None
+        for p in players:
+            if p.hoops == maxHoops:
+                if best == None:
+                    best = p.name
+                else: 
+                    logger.info("draw");
+                    return None
+        logger.info(best + " got most hoops")
+        return best
 
-##
-
-
-##
-##	/**
-##	 * Create first round (numbered 0) using names ordered as specified for
-##	 * recovering from journal
-##	 * 
-##	 * @param names List of names to set for the first round
-##	 */
-##	public void start(List<String> names) {
-##		List<PersonScore> round = new ArrayList<>();
-##		for (String name : names) {
-##			PersonScore ps = new PersonScore(name);
-##			round.add(ps);
-##		}
-##		rounds.add(round);
-##	}
-##
 ##	public void writeLog(List<PersonScore> round, boolean firstRound) throws SwissException {
 ##		String logname = "journal.txt";
 ##		try (FileWriter f = new FileWriter(logname, !firstRound)) {

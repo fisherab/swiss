@@ -1,3 +1,5 @@
 gamelog*
 **/__pycache__
 *.pyc
+*.log
+
