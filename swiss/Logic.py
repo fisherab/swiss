@@ -63,13 +63,21 @@ class CombResult:
 
 class Tournament(object):
 
-    def __init__(self, byeScore, maxCombis, enoughGood, numLawns):
+    def __init__(self):
+        self.byeScore = None
+        self.maxCombis = None
+        self.enoughGood = None
+        self.numLawns = None
+        self.randomStart = None
+        self.players = {}
+        self.rounds = []
+
+    def setOpts(self, byeScore, maxCombis, enoughGood, numLawns, randomStart):
         self.byeScore = byeScore
         self.maxCombis = maxCombis
         self.enoughGood = enoughGood
         self.numLawns = numLawns
-        self.players = {}
-        self.rounds = []
+        self.randomStart = randomStart
 
     def addPlayer(self, name, col=None, allowBye=False):
         if name in self.players: raise Exception("Player " + name + " already present")
@@ -84,20 +92,9 @@ class Tournament(object):
         if len(self.players) % 2 == 1: self.players["Bye"] = Player("Bye", None)
         round = []
         for name in self.players: round.append([name,0])
-        random.shuffle(round)
+        if self.randomStart: random.shuffle(round)
         self.rounds.append(round)
-
-    def startWithNames(self, names):
-        """
-        Create first round (numbered 0) using names ordered as specified for
-        recovering from journal
-     
-        :param names List of names to set for the first round
-        """
-        round = []
-        for name in names: round.append([name, 0])
-        self.rounds.append(round)
-
+      
     def getKORounds(self):
         maxPeople = 2
         koRounds = 1
@@ -140,7 +137,10 @@ class Tournament(object):
                 if self.players[pName].games == i: self.ranking.append(pName)
   
     def prepareRound(self):
-        ### Create a new round and add it to the rounds list. ###
+        '''
+        Create a new round with the players in correct order and add it to the rounds list.
+
+        '''
         tempRanking = self.ranking.copy()
         round = []
         self.rounds.append(round)
@@ -244,6 +244,13 @@ class Tournament(object):
             if p2[0] == "Bye": p1[1] = self.byeScore
    
     def makeGamesChoices(self, round):
+        '''
+        Choose colours, lawn etc
+
+        Parameters:
+            round: the round to be processed
+
+        '''
         numPrimarys = self.numLawns
         numSecondarys = self.numLawns
         games = []
@@ -422,7 +429,6 @@ class Tournament(object):
         npos = 1
         for key in reversed(sorted(r.keys())):     
             players = list(r[key])
-
             while len(players) > 0:
                 if len(players) == 1:
                     result[players[0].name] = npos
@@ -475,48 +481,14 @@ class Tournament(object):
             else: return Tournament.mostHooper(players);
 
         else: # Three or more in tie
-            print(", games won in tie " + names)
-            if wins == len(players) * (len(players) - 1) // 2:
-                print(", all played")
-                max = 0
-##                for (Entry<String, Integer> name : names.entrySet()) {
-##                    if (name.getValue() > max) {
-##                        max = name.getValue();
-##                    }
-##                }
-##                String best = null;
-##                for (Entry<String, Integer> name : names.entrySet()) {
-##                    if (name.getValue() == max) {
-##                        if (best == null) {
-##                            best = name.getKey();
-##                        } else {
-##                            return mostHooper(set);
-##                        }
-##                    }
-##                }
-                print(", " + best + " beat others in tie ")
-                return best
-            else: 
-                print(", not all played")
-##                int needed = set.size() - 1;
-##                String best = null;
-##                for (Entry<String, Integer> name : names.entrySet()) {
-##                    if (name.getValue() == needed) {
-##                        if (best == null) {
-##                            best = name.getKey();
-##                        } else {
-##                            return mostHooper(set);
-##                        }
-##                    }
-##                }
-##                if (best != null) {
-##                    System.out.println(", " + best + " beat others in tie ");
-##                    return best;
-##                } else {
-##                    return mostHooper(set);
-##                }
- 
-
+            logger.info("games won in tie " + str(names))
+            needed = len(players) - 1 # See if somebody beat all others in group
+            for key, value in names.items():
+                if value == needed:
+                    logger.info(key + " beat all others in tie ")
+                    return key
+            return Tournament.mostHooper(players)
+   
     @staticmethod
     def mostHooper(players):
         maxHoops = 0;
@@ -534,39 +506,85 @@ class Tournament(object):
         logger.info(best + " got most hoops")
         return best
 
-##	public void writeLog(List<PersonScore> round, boolean firstRound) throws SwissException {
-##		String logname = "journal.txt";
-##		try (FileWriter f = new FileWriter(logname, !firstRound)) {
-##			if (firstRound) {
-##				for (int i = 0; i < round.size(); i++) {
-##					if (i != 0) {
-##						f.write(",");
-##					}
-##					String name = round.get(i).getName();
-##					f.write(name);
-##					Colours col = players.get(name).getColours();
-##					if (col != null) {
-##						f.write(" -" + col.name().charAt(0));
-##					}
-##				}
-##				f.write("\n");
-##			}
-##			int ngames = round.size() / 2;
-##			for (int i = 0; i < ngames; i++) {
-##				PersonScore p1 = round.get(2 * i);
-##				PersonScore p2 = round.get(2 * i + 1);
-##				if (p1.getScore() > p2.getScore()) {
-##					f.write(p1.getName() + ",beat," + p2.getName() + "," + p1.getScore() + "," + p2.getScore() + "\n");
-##				} else if (p1.getScore() < p2.getScore()) {
-##					f.write(p2.getName() + ",beat," + p1.getName() + "," + p2.getScore() + "," + p1.getScore() + "\n");
-##				} else {
-##					f.write(p1.getName() + ",draws with," + p2.getName() + "," + p1.getScore() + "," + p2.getScore()
-##							+ "\n");
-##				}
-##			}
-##		} catch (IOException e) {
-##			throw new SwissException(e.getClass() + " " + e.getMessage());
-##		}
-##	}
-##
-##}
+    def writeLog(self, round, firstRound):
+        logname = "journal.txt"
+        with open (logname, "w" if firstRound else "a") as f:
+            if firstRound:
+                opts = {}
+                opts["byeScore"] = self.byeScore
+                opts["maxCombis"] = self.maxCombis
+                opts["enoughGood"] = self.enoughGood
+                opts["numLawns"] = self.numLawns
+                opts["randomStart"] = self.randomStart
+                f.write(str(opts)+"\n")
+                for i in range(len(round)):
+                    if i != 0: f.write(",")
+                    name = round[i][0]
+                    f.write(name)
+                    col = self.players[name].colours
+                    if col != None: f.write(" -" + col.name[0])
+                
+                f.write("\n");
+            
+            ngames = len(round) // 2
+            for i in range(ngames):
+                p1 = round[2 * i]
+                p2 = round[2 * i + 1]
+                if p1[1] > p2[1]: f.write(p1[0] + ",beat," + p2[0] + "," + str(p1[1]) + "," + str(p2[1]) + "\n")
+                elif p1[1] < p2[1]: f.write(p2[0] + ",beat," + p1[0] + "," + str(p2[1]) + "," + str(p1[1]) + "\n");
+                else: f.write(p1[0] + ",draws with," + p2[0] + "," + str(p1[1]) + "," + str(p2[1]) + "\n")
+
+    def recoverFromLog(self, journal):
+        names = []
+        with journal.open() as j:
+            opts = eval(j.readline().strip())
+            for opt, val in opts.items():
+                exec("self." + opt + "=" + str(val))
+            players = j.readline().strip().split(",")
+            for player in players:
+                player = player.strip()
+                if player.upper()[-2:] == "-P":
+                    name = player[:-2].strip()
+                    names.append(name);
+                    self.addPlayer(name, Colours.PRIMARY, allowBye = True)
+                elif player.upper()[-2:] == "-S":
+                    name = player[:-2].strip()
+                    names.append(name);
+                    self.addPlayer(name, Colours.SECONDARY, allowBye = True)
+                else:
+                    name = player
+                    names.append(name);
+                    self.addPlayer(name, allowBye = True)
+
+            lines = []    
+            for line in j:
+                lines.append(line.strip())
+            round = []
+            for name in names: round.append([name, 0])
+            self.rounds.append(round)
+
+            roundsInJournal = len(lines)* 2 // len(self.players)
+            if len(lines) * 2 % len(self.players) != 0: raise Exception("The journal.txt file has an incomplete round - please correct it manually and try again")
+            linenum = 0
+            for roff in range(roundsInJournal):
+                if roff != 0: self.prepareRound()
+                round = self.rounds[roff]
+                self.makeGamesChoices(round)
+                psj = {}
+                for k in range(len(self.players) // 2):
+                    bits = lines[linenum].split(",")
+                    linenum += 1           
+                    psj[bits[0]] = int(bits[3])
+                    psj[bits[2]] = int(bits[4])
+                
+                for pos in range(len(round)):
+                    name = round[pos][0]
+                    round[pos] = [name, psj[name]]
+                self.computeRanking()
+                res = "Ranking after round " + str(len(self.rounds))
+                for name in self.ranking: res += "  " + name + ": " + str(self.players[name].games)
+                logger.info(res)
+              
+            logger.info("Recovery of " + str(roundsInJournal) + " rounds complete")
+            
+    

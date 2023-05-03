@@ -1,0 +1,6 @@
+{'byeScore': 26, 'maxCombis': 1000000000, 'enoughGood': 100, 'numLawns': 4, 'randomStart': False}
+Andrew Aardvark -P,Bill Banana -S,Cool Cucumber,Dangerous Dan
+Bill Banana,beat,Andrew Aardvark,23,6
+Cool Cucumber,beat,Dangerous Dan,22,2
+Bill Banana,beat,Cool Cucumber,23,22
+Andrew Aardvark,beat,Dangerous Dan,6,2
