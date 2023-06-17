@@ -2,36 +2,51 @@ from swiss import Logic
 import logging
 from pathlib import Path
 from datetime import datetime
+from tkinter import *
+from tkinter.ttk import *
 
 logging.basicConfig(filename='cmd.log', filemode='w', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-class Cmd(object):
-
-    @staticmethod
-    def getWithDefaults(name, defaultValue):
-        s = input(name + " (" + str(defaultValue) + "): ").strip();
-        if s == "": return defaultValue
-        if s[0].upper() == "T": return True
-        if s[0].upper() == "F": return False
-        return int(s)
+class Gui(object):
 
     def run(self):
         logger.info("We're running")
         tournament = Logic.Tournament()
         journal = Path("journal.txt")
         journalRecovery = journal.is_file()
-        lines = []
+
+
+        root = Tk()
+
+        Label(root, text='Classic Label').pack()
+        Label(root, text='Themed Label').pack()
+
+##        l1 = Label(text="Test", fg="black", bg="white")
+##        l2 = Label(text="Test", fg="black", bg="white")
+##        l1.pack()
+##        l2.pack()
+
+        style = Style()
+        style.configure("BW.TLabel", foreground="black", background="white")
+
+        l3 = Label(text="Test", style="BW.TLabel")
+        l4 = Label(text="Test")
+        l3.pack()
+        l4.pack()
+
+        root.mainloop()
+ 
         if journalRecovery:
             tournament.recoverFromLog(journal)
             tournament.prepareRound()
         
         else: # No journal recovery
-            byeScore = Cmd.getWithDefaults("byeScore", 26);
-            maxCombis = Cmd.getWithDefaults("maxCombis", 1000000000);
-            enoughGood = Cmd.getWithDefaults("enoughGood", 100);
-            numLawns = Cmd.getWithDefaults("numLawns", 2);
-            randomStart = Cmd.getWithDefaults("randomStart", True);
+##            byeScore = Cmd.getWithDefaults("byeScore", 26);
+##            maxCombis = Cmd.getWithDefaults("maxCombis", 1000000000);
+##            enoughGood = Cmd.getWithDefaults("enoughGood", 100);
+##            numLawns = Cmd.getWithDefaults("numLawns", 2);
+##            randomStart = Cmd.getWithDefaults("randomStart", True);
             tournament.setOpts(byeScore, maxCombis, enoughGood, numLawns, randomStart)
             while True:
                 player = input("player (empty to end, finish name with -P or -S if CVD): ").strip()
@@ -183,8 +198,8 @@ class Cmd(object):
         return exitAllowed
 
 def main():
-    cmd = Cmd()
-    cmd.run()
+    gui = Gui()
+    gui.run()
 
 if __name__ == "__main__":
     main()

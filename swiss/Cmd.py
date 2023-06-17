@@ -70,8 +70,15 @@ class Cmd(object):
                     if Cmd.isExitAllowed(round): roundInProgress = False        
                 else:
                     try:
-                        gameNum = int(cmd)
-                        Cmd.storeScores(round, gameNum)
+                        ngame = 1
+                        for i in range(len(round) // 2):
+                            p1 = round[2 * i]
+                            p2 = round[2 * i + 1]
+                            if p1[0] != "Bye" and p2[0] != "Bye":
+                                ngame += 1
+                            if ngame - 1 == int(cmd):
+                                Cmd.storeScores(round, i)
+                                break
                     except ValueError:
                         print("Invalid input")
              
@@ -139,8 +146,10 @@ class Cmd(object):
                     print(fmt.format(i, name, wins, hoops, str(lawns), prim, starts))
 
     @staticmethod
-    def storeScores(round, gameNum):
-        i = gameNum - 1
+    def storeScores(round, i):
+        '''
+        Store score at offset i in the round.
+        '''
         if i < 0 or i >= len(round) // 2:
             print ("Invalid game number")
             return

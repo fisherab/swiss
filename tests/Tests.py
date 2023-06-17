@@ -220,6 +220,91 @@ class TestBasicSwiss(unittest.TestCase):
                     starts = p.startCount
                     ## print(fmt.format(i, name, wins, hoops, str(lawns), prim, starts))
 
+    def testStart15(self):
+        sw =  Logic.Tournament();
+        sw.setOpts(14, 1000000000, 100, 4, True)
+        sw.addPlayer("A", Logic.Colours.PRIMARY)
+        sw.addPlayer("B", Logic.Colours.SECONDARY)
+        sw.addPlayer("C")
+        sw.addPlayer("D")
+        sw.addPlayer("E")
+        sw.addPlayer("F")
+        sw.addPlayer("G")
+        sw.addPlayer("H")
+        sw.addPlayer("I")
+        sw.addPlayer("J")
+        sw.addPlayer("K")
+        sw.addPlayer("L")
+        sw.addPlayer("M")
+        sw.addPlayer("N")
+        sw.addPlayer("O")
+                     
+        sw.start();
+ 
+        for j in range(sw.getMaxRounds()):
+            if j != 0:
+                sw.computeRanking()
+                logger.info("Ranking after round " + str(j) + " ")
+                res = ""
+                for name in sw.ranking:
+                    res += name + ": " + str(sw.players[name].games) + "  "
+                logger.info(res)
+                sw.prepareRound()
+            
+            round = sw.rounds[j]
+            if len(round) == 0:
+                logger.info("Stopping early as no more game combination after round " + str(j))
+                j -= 1
+                break
+            else:
+                sw.setByeScores();
+                sw.makeGamesChoices(round);
+                ngames = len(round) // 2;
+     
+                for i in range(ngames):
+                    p1 = round[2 * i]
+                    p2 = round[2 * i + 1]
+                    if p1[0] != "Bye" and p2[0] != "Bye":
+                        badScore = random.randrange(26);
+                        goodScore = badScore + 1 + random.randrange(26 - badScore);
+                        if p1[0] < p2[0]:
+                            p1[1] = goodScore
+                            p2[1] = badScore
+                        else:
+                            p1[1] = badScore
+                            p2[1] = goodScore
+                        
+                logger.info("Score in round %s : %s", j + 1, round)
+            
+        sw.computeRanking()
+        logger.info("Ranking after round " + str(j + 1) + " ")
+        res = ""
+        for name in sw.ranking:
+            res += name + ": " + str(sw.players[name].games) + "  "
+        logger.info(res)
+            
+        fr = sw.getFinalRanking()
+
+        logger.info("Final ranking")
+        logger.info(fr)
+
+        fmt = "{:2} {:.<18} {:4} : {:5} {:>12} {:>10} {:>9}"
+        ## print(fmt.format(" #", "name", "wins", "hoops", "lawns", "primaryXS", "starts"))
+        for i in range(1,len(sw.players)+1):
+            for name, val in fr.items():
+                if val == i:
+                    p = sw.players[name]
+                    wins = p.games
+                    hoops = p.hoops
+                    prim = p.primarys-p.secondarys
+                    lawns = []
+                    for j in range(sw.numLawns):
+                        if j in p.lawns: lawns.append(p.lawns[j])
+                        else: lawns.append(0)
+                    starts = p.startCount
+                    ## print(fmt.format(i, name, wins, hoops, str(lawns), prim, starts))
+
+
     def writeLog(self):
         sw =  Logic.Tournament()
         sw.setOpts(26, 1000000000, 100, 4, False)

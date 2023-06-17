@@ -221,7 +221,7 @@ class Tournament(object):
             games.sort(key=lambda game: game.square)
            
             # Compute bestGames via recursive call
-            combResult = Tournament.bestCombinations(games, gamesPerRound, set(), 0, set(), enoughGood if combis > self.maxCombis else None)
+            combResult = Tournament.bestCombinations(games, gamesPerRound, set(), 0, set(), self.enoughGood if combis > self.maxCombis else None)
 
             round.clear()
             if combResult.bestGames == None:
@@ -355,12 +355,12 @@ class Tournament(object):
                 self.players[first.name2].startCount += 1
             
         for game in games:
-            logger.debug(str(game) + " "
+            print(str(game) + " "
                     + game.colours.name + " on lawn " + str(game.lawn + 1) + " go "
                     + ("first" if game.start else "second"))
         
         if bye != None:
-            logger.debug(bye + " gets a bye")
+            print(bye + " gets a bye")
         
     @staticmethod
     def bestCombinations(games, gamesPerRound, inResults, inSum, inNames, enoughGood):
