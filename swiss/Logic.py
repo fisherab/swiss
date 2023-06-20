@@ -71,6 +71,7 @@ class Tournament(object):
         self.randomStart = None
         self.players = {}
         self.rounds = []
+        self.resting = {}
 
     def setOpts(self, byeScore, maxCombis, enoughGood, numLawns, randomStart):
         self.byeScore = byeScore
@@ -80,10 +81,56 @@ class Tournament(object):
         self.randomStart = randomStart
 
     def addPlayer(self, name, col=None, allowBye=False):
-        if name in self.players: raise Exception("Player " + name + " already present")
+        if name in self.players or name in self.resting: raise Exception("Player " + name + " already present")
         if name == "Bye" and not allowBye: raise Exception("The player name 'Bye' is reserved")
         if col != None: logger.debug(name + " will get " + col.name)
         self.players[name] = Player(name, col)
+
+    def addLatePlayer(self, name):
+        flag = name.upper()[-2:]
+        if flag == "-P":
+            self.addPlayer(name[:-2].strip(), Logic.Colours.PRIMARY)
+            self.ranking.append(name[:-2])
+        elif flag == "-S":
+            self.addPlayer(name[:-2].strip(), Logic.Colours.SECONDARY)
+            self.ranking.append(name[:-2])
+        else:
+            self.addPlayer(name)
+            self.ranking.append(name)
+        if "Bye" in self.players:
+             del self.players["Bye"]
+             self.ranking.remove("Bye")
+        else:
+            self.players ["Bye"] = Player("Bye", None)
+            self.ranking.append("Bye")
+        with open ("journal.txt", "a") as f:
+            f.write (":ADD " + name + "\n")
+
+    def removePlayer(self, name):
+        self.resting[name] = self.players[name]
+        del self.players[name]
+        self.ranking.remove(name)
+        if "Bye" in self.players:
+            del self.players["Bye"]
+            self.ranking.remove("Bye")
+        else:
+            self.players ["Bye"] = Player("Bye", None)
+            self.ranking.append("Bye")
+        with open ("journal.txt", "a") as f:
+            f.write (":REMOVE " + name + "\n")
+
+    def restorePlayer(self, name):
+        self.players[name] = self.resting[name]
+        self.ranking.append(name)
+        del self.resting[name]
+        if "Bye" in self.players:
+             del self.players["Bye"]
+             self.ranking.remove("Bye")
+        else:
+            self.players ["Bye"] = Player("Bye", None)
+            self.ranking.append("Bye")
+        with open ("journal.txt", "a") as f:
+            f.write (":RESTORE " + name + "\n")
 
     def start(self):
         """
@@ -355,9 +402,13 @@ class Tournament(object):
                 self.players[first.name2].startCount += 1
             
         for game in games:
-            print(str(game) + " "
-                    + game.colours.name + " on lawn " + str(game.lawn + 1) + " go "
-                    + ("first" if game.start else "second"))
+##            print(str(game) + " "
+##                    + game.colours.name + " on lawn " + str(game.lawn + 1) + " go "
+##                    + ("first" if game.start else "second"))
+            pos = game.lawn + 1
+            lawn = 1 if game.start else 2
+            print(str(game) + " on lawn " + str(lawn) + " position "
+                    + (str(pos)))
         
         if bye != None:
             print(bye + " gets a bye")
@@ -419,7 +470,7 @@ class Tournament(object):
     
     def getFinalRanking(self):
         r = {}
-        for name, player in self.players.items():
+        for name, player in (self.players | self.resting).items():
             if name != "Bye":
                 numGames = player.games
                 if numGames not in r: r[numGames] = set()
@@ -427,7 +478,7 @@ class Tournament(object):
     
         result = {}
         npos = 1
-        for key in reversed(sorted(r.keys())):     
+        for key in reversed(sorted(r.keys())):
             players = list(r[key])
             while len(players) > 0:
                 if len(players) == 1:
@@ -559,32 +610,44 @@ class Tournament(object):
             lines = []    
             for line in j:
                 lines.append(line.strip())
-            round = []
-            for name in names: round.append([name, 0])
-            self.rounds.append(round)
 
-            roundsInJournal = len(lines)* 2 // len(self.players)
-            if len(lines) * 2 % len(self.players) != 0: raise Exception("The journal.txt file has an incomplete round - please correct it manually and try again")
-            linenum = 0
-            for roff in range(roundsInJournal):
-                if roff != 0: self.prepareRound()
-                round = self.rounds[roff]
-                self.makeGamesChoices(round)
-                psj = {}
-                for k in range(len(self.players) // 2):
-                    bits = lines[linenum].split(",")
-                    linenum += 1           
-                    psj[bits[0]] = int(bits[3])
-                    psj[bits[2]] = int(bits[4])
-                
-                for pos in range(len(round)):
-                    name = round[pos][0]
-                    round[pos] = [name, psj[name]]
-                self.computeRanking()
-                res = "Ranking after round " + str(len(self.rounds))
-                for name in self.ranking: res += "  " + name + ": " + str(self.players[name].games)
-                logger.info(res)
-              
-            logger.info("Recovery of " + str(roundsInJournal) + " rounds complete")
+        newRound = True
+        for line in lines:
+            if line[0] == ":":
+                space = line.find(" ")
+                cmd = line[:space]
+                name = line[space+1:]
+                print (cmd)
+                if cmd == ":ADD":
+                    self.players[name] = Player(name,None)
+                elif cmd == ":REMOVE":
+                    self.resting[name] = self.players[name]
+                    del self.players[name]
+                elif cmd == ":RESTORE":
+                    self.players[name] = self.resting[name]
+                    del self.resting[name]
+                if "Bye" in self.players:
+                    del self.players["Bye"]
+                else:
+                    self.players ["Bye"] = Player("Bye", None)
+    
+            else:
+                if newRound:
+                    round = []
+                    self.rounds.append(round)
+                    newRound = False
+                bits = line.split(",")
+
+                round.append([bits[0], int(bits[3])])
+                round.append([bits[2], int(bits[4])])
+                if len(round) == len(self.players) :
+                    self.makeGamesChoices(round)
+                    newRound = True
+                    self.computeRanking()
+                    res = "Ranking after round " + str(len(self.rounds))
+                    for name in self.ranking: res += "  " + name + ": " + str(self.players[name].games)
+                    logger.info(res)
+          
+        logger.info("Recovery of " + str(len(self.rounds)) + " rounds complete")
             
     

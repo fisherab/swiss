@@ -1,6 +1,27 @@
-{'byeScore': 26, 'maxCombis': 1000000000, 'enoughGood': 100, 'numLawns': 4, 'randomStart': False}
-Andrew Aardvark -P,Bill Banana -S,Cool Cucumber,Dangerous Dan
-Bill Banana,beat,Andrew Aardvark,23,6
-Cool Cucumber,beat,Dangerous Dan,22,2
-Bill Banana,beat,Cool Cucumber,23,22
-Andrew Aardvark,beat,Dangerous Dan,6,2
+{'byeScore': 13, 'maxCombis': 1000000000, 'enoughGood': 100, 'numLawns': 4, 'randomStart': True}
+k,o,l,f,n,g,i,c,j,Bye,e,d,a,m,h,b
+o,beat,k,3,2
+f,beat,l,4,3
+g,beat,n,5,4
+c,beat,i,6,5
+j,beat,Bye,13,0
+d,beat,e,7,6
+m,beat,a,8,7
+b,beat,h,9,8
+:REMOVE n
+f,beat,o,3,2
+c,beat,g,4,3
+d,beat,j,5,4
+b,beat,m,6,5
+l,beat,k,7,6
+e,beat,i,8,7
+h,beat,a,9,8
+:REMOVE c
+:REMOVE m
+:REMOVE f
+b,beat,d,3,2
+g,beat,o,4,3
+l,beat,j,5,4
+h,beat,e,6,5
+i,beat,k,7,6
+a,beat,Bye,13,0

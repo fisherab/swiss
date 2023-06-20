@@ -102,7 +102,7 @@ class Cmd(object):
                     finishChoiceMade = True
                     continue
                 
-                cmd = input("FINISH (tournament), NEXT (to start next round) ").upper().strip()
+                cmd = input("FINISH (tournament), NEXT (to start next round), REMOVE (to remove a plyer), RESTORE (to restore a player) or ADD (to add a new player) ").upper().strip()
                 if cmd == "FINISH":
                     finished = True;
                     finishChoiceMade = True;
@@ -110,12 +110,38 @@ class Cmd(object):
                     try:
                         tournament.prepareRound()
                         finishChoiceMade = True
-                    except Exception as e:
+                    except SyntaxError as e:
                         print(e)
                         print("Tournament will finish")
                         finished = True
                         finishChoiceMade = True
                         continue
+                elif cmd == "REMOVE":
+                    for p in tournament.players:
+                        if p != "Bye": print (p)
+                    try:
+                        name = input ("Please specify precise name of player to remove ")
+                        tournament.removePlayer(name)
+                    except KeyError:
+                        print("Invalid input")
+                    
+                elif cmd == "RESTORE":
+                    for p in tournament.resting:
+                        print (p)
+                    try:
+                        name = input ("Please specify precise name of player to restore ")
+                        tournament.restorePlayer(name)
+                    except KeyError:
+                        print("Invalid input")
+                        
+                elif cmd == "ADD":
+                    try:
+                        name = input("player (finish name with -P or -S if CVD): ").strip()
+                        tournament.addLatePlayer(name)
+                    except Exception as e:
+                        print (e)
+                else:
+                    print("Bad input ignored")
   
         source = Path("journal.txt")
         strDate = datetime.today().strftime("%Y-%m-%d")
@@ -134,7 +160,7 @@ class Cmd(object):
         for i in range(1,len(tournament.players)+1):
             for name, val in fr.items():
                 if val == i:
-                    p = tournament.players[name]
+                    p = (tournament.players | tournament.resting) [name]
                     wins = p.games
                     hoops = p.hoops
                     prim = p.primarys-p.secondarys
