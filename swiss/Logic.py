@@ -412,6 +412,61 @@ class Tournament(object):
         
         if bye != None:
             print(bye + " gets a bye")
+
+    def finishRound(self):
+        finished = False
+        finishChoiceMade = False
+        while not finishChoiceMade:
+            roundNum = len(self.rounds)
+            if roundNum >= self.getRecRounds(): print("You have completed the recommended number of rounds:", self.getRecRounds())
+            if roundNum >= self.getMaxRounds():
+                print("You have completed the maximum number of rounds:", self.getMaxRounds());
+                finished = True
+                finishChoiceMade = True
+                continue
+            
+            cmd = input("FINISH (tournament), NEXT (to start next round), REMOVE (to remove a plyer), RESTORE (to restore a player) or ADD (to add a new player) ").upper().strip()
+            if cmd == "FINISH":
+                finished = True;
+                finishChoiceMade = True;
+            elif cmd == "NEXT":
+                try:
+                    self.prepareRound()
+                    finishChoiceMade = True
+                except SyntaxError as e:
+                    print(e)
+                    print("Tournament will finish")
+                    finished = True
+                    finishChoiceMade = True
+                    continue
+            elif cmd == "REMOVE":
+                for p in self.players:
+                    if p != "Bye": print (p)
+                try:
+                    name = input ("Please specify precise name of player to remove ")
+                    self.removePlayer(name)
+                except KeyError:
+                    print("Invalid input")
+                
+            elif cmd == "RESTORE":
+                for p in self.resting:
+                    print (p)
+                try:
+                    name = input ("Please specify precise name of player to restore ")
+                    self.restorePlayer(name)
+                except KeyError:
+                    print("Invalid input")
+                    
+            elif cmd == "ADD":
+                try:
+                    name = input("player (finish name with -P or -S if CVD): ").strip()
+                    self.addLatePlayer(name)
+                except Exception as e:
+                    print (e)
+            else:
+                print("Bad input ignored")
+                
+        return finished
         
     @staticmethod
     def bestCombinations(games, gamesPerRound, inResults, inSum, inNames, enoughGood):
@@ -475,7 +530,6 @@ class Tournament(object):
                 numGames = player.games
                 if numGames not in r: r[numGames] = set()
                 r[numGames].add(player)
-    
         result = {}
         npos = 1
         for key in reversed(sorted(r.keys())):

@@ -1,0 +1,4 @@
+#!
+PYTHONPATH=. python swiss/Gui.py
+
+

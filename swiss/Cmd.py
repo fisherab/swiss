@@ -22,9 +22,10 @@ class Cmd(object):
         journal = Path("journal.txt")
         journalRecovery = journal.is_file()
         lines = []
+        finished = False
         if journalRecovery:
             tournament.recoverFromLog(journal)
-            tournament.prepareRound()
+            finished = tournament.finishRound()
         
         else: # No journal recovery
             byeScore = Cmd.getWithDefaults("byeScore", 26);
@@ -47,7 +48,6 @@ class Cmd(object):
         print("Rounds KO:" + str(tournament.getKORounds()) + ", Max:" + str(tournament.getMaxRounds())
                 + ", Recommended:" + str(tournament.getRecRounds()))
 
-        finished = False
         
         while not finished:
             roundNum = len(tournament.rounds)
@@ -92,57 +92,8 @@ class Cmd(object):
             for name in tournament.ranking:
                 print(" " + name + ":" + str(tournament.players[name].games), end="")
             print()
+            finished = tournament.finishRound()
             
-            finishChoiceMade = False
-            while not finishChoiceMade:
-                if roundNum >= tournament.getRecRounds(): print("You have completed the recommended number of rounds.")
-                if roundNum >= tournament.getMaxRounds():
-                    print("You have completed the maximum number of rounds.");
-                    finished = True
-                    finishChoiceMade = True
-                    continue
-                
-                cmd = input("FINISH (tournament), NEXT (to start next round), REMOVE (to remove a plyer), RESTORE (to restore a player) or ADD (to add a new player) ").upper().strip()
-                if cmd == "FINISH":
-                    finished = True;
-                    finishChoiceMade = True;
-                elif cmd == "NEXT":
-                    try:
-                        tournament.prepareRound()
-                        finishChoiceMade = True
-                    except SyntaxError as e:
-                        print(e)
-                        print("Tournament will finish")
-                        finished = True
-                        finishChoiceMade = True
-                        continue
-                elif cmd == "REMOVE":
-                    for p in tournament.players:
-                        if p != "Bye": print (p)
-                    try:
-                        name = input ("Please specify precise name of player to remove ")
-                        tournament.removePlayer(name)
-                    except KeyError:
-                        print("Invalid input")
-                    
-                elif cmd == "RESTORE":
-                    for p in tournament.resting:
-                        print (p)
-                    try:
-                        name = input ("Please specify precise name of player to restore ")
-                        tournament.restorePlayer(name)
-                    except KeyError:
-                        print("Invalid input")
-                        
-                elif cmd == "ADD":
-                    try:
-                        name = input("player (finish name with -P or -S if CVD): ").strip()
-                        tournament.addLatePlayer(name)
-                    except Exception as e:
-                        print (e)
-                else:
-                    print("Bad input ignored")
-  
         source = Path("journal.txt")
         strDate = datetime.today().strftime("%Y-%m-%d")
         target = Path("gamelog-" + strDate + ".txt")
@@ -157,7 +108,7 @@ class Cmd(object):
 
         fmt = "{:2} {:.<18} {:4} : {:5} {:>12} {:>10} {:>9}"
         print(fmt.format(" #", "name", "wins", "hoops", "lawns", "primaryXS", "starts"))
-        for i in range(1,len(tournament.players)+1):
+        for i in range(1,len(tournament.players | tournament.resting)+1):
             for name, val in fr.items():
                 if val == i:
                     p = (tournament.players | tournament.resting) [name]
