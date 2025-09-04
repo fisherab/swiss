@@ -11,7 +11,7 @@ import os
 logging.basicConfig(filename='test.log', filemode='w', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-class TestBasicSwiss(unittest.TestCase):
+class AllTests(unittest.TestCase):
 
     def combis(self, gamesPerRound, numClash, enoughGood = None):
         games= []
