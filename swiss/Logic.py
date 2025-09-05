@@ -352,7 +352,7 @@ class Tournament(object):
                     p2.secondarys += 1
                     numSecondarys -= 1
      
-        lawnPos = set()
+        lawnPos = set() # This is filled with two entries for each lawn (for P and S)
         for i in range(self.numLawns):
             lawnPos.add(2 * i)
             lawnPos.add(2 * i + 1)
@@ -369,10 +369,12 @@ class Tournament(object):
                     if best == -1 or lawnsCount < count: best = lawn
                     count = lawnsCount
             
-            p1.incLawns(best % self.numLawns)
-            p2.incLawns(best % self.numLawns)
+            if best == -1: best = list(lawnPos).pop()
             lawnPos.remove(best)
-            game.lawn = best % self.numLawns
+            lawn = best % self.numLawns
+            p1.incLawns(lawn)
+            p2.incLawns(lawn)
+            game.lawn = lawn
         
         for i in range(self.numLawns):
             numStarts = -1
@@ -402,13 +404,9 @@ class Tournament(object):
                 self.players[first.name2].startCount += 1
             
         for game in games:
-##            print(str(game) + " "
-##                    + game.colours.name + " on lawn " + str(game.lawn + 1) + " go "
-##                    + ("first" if game.start else "second"))
-            pos = game.lawn + 1
-            lawn = 1 if game.start else 2
-            print(str(game) + " on lawn " + str(lawn) + " position "
-                    + (str(pos)))
+            print(str(game) + " "
+                    + game.colours.name + " on lawn " + str(game.lawn + 1) + " go "
+                    + ("first" if game.start else "second"))
         
         if bye != None:
             print(bye + " gets a bye")
