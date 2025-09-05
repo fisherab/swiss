@@ -232,8 +232,8 @@ class AllTests(unittest.TestCase):
         sw.addPlayer("G")
                      
         sw.start();
- 
-        for j in range(sw.getMaxRounds()):
+
+        for j in range(sw.getMaxRounds()-1):
 
             if j != 0:
                 try:
@@ -257,8 +257,6 @@ class AllTests(unittest.TestCase):
                     sw.restorePlayer("A")
                 elif j == 4:
                     sw.addLatePlayer("Z")
-                elif j == 5:
-                    return
                 sw.prepareRound()
             
             round = sw.rounds[j]
@@ -286,10 +284,6 @@ class AllTests(unittest.TestCase):
                         
                 logger.info("Score in round %s : %s", j + 1, round)
 
-        try:
-            sw.writeLog(round, roundNum == 1)
-        except Exception:
-            print("Failed to write log for round", round)    
         sw.computeRanking()
         logger.info("Ranking after round " + str(j + 1) + " ")
         res = ""
@@ -388,7 +382,7 @@ class AllTests(unittest.TestCase):
         logger.info(fr)
 
         fmt = "{:2} {:.<18} {:4} : {:5} {:>12} {:>10} {:>9}"
-        ## print(fmt.format(" #", "name", "wins", "hoops", "lawns", "primaryXS", "starts"))
+        print(fmt.format(" #", "name", "wins", "hoops", "lawns", "primaryXS", "starts"))
         for i in range(1,len(sw.players)+1):
             for name, val in fr.items():
                 if val == i:
@@ -401,7 +395,7 @@ class AllTests(unittest.TestCase):
                         if j in p.lawns: lawns.append(p.lawns[j])
                         else: lawns.append(0)
                     starts = p.startCount
-                    ## print(fmt.format(i, name, wins, hoops, str(lawns), prim, starts))
+                    print(fmt.format(i, name, wins, hoops, str(lawns), prim, starts))
 
 
     def writeLog(self):
